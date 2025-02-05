@@ -75,7 +75,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
-    padding: 20
+    padding: 18
   },
   titleWrapper: {
     marginTop: 20,
@@ -103,7 +103,7 @@ const styles = StyleSheet.create({
   },
   button: {
     backgroundColor: "#fff",
-    paddingVertical: 80,
+    paddingVertical: 89,
     width: "100%",
     borderRadius: 10,
     marginBottom: 30,

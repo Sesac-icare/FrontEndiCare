@@ -63,13 +63,7 @@ function TabNavigator() {
         tabBarActiveTintColor: "#016a4c",
         tabBarInactiveTintColor: "#CCCCCC",
         tabBarLabelStyle: {
-          paddingBottom: 8,
-          fontSize: 12,
-          fontWeight: "500",
-          marginTop: -4
-        },
-        tabBarIconStyle: {
-          marginTop: -4
+          paddingBottom: 8
         }
       }}
     >
@@ -78,7 +72,7 @@ function TabNavigator() {
         component={HomeScreen}
         options={{
           tabBarIcon: ({ color }) => (
-            <MaterialIcons name="home" size={28} color={color} />
+            <MaterialIcons name="home" size={24} color={color} />
           )
         }}
       />
@@ -87,7 +81,7 @@ function TabNavigator() {
         component={ChatScreen}
         options={{
           tabBarIcon: ({ color }) => (
-            <MaterialIcons name="chat" size={28} color={color} />
+            <MaterialIcons name="chat-bubble-outline" size={24} color={color} />
           )
         }}
       />
@@ -96,7 +90,7 @@ function TabNavigator() {
         component={MyPageScreen}
         options={{
           tabBarIcon: ({ color }) => (
-            <MaterialIcons name="person" size={28} color={color} />
+            <MaterialIcons name="person" size={24} color={color} />
           )
         }}
       />

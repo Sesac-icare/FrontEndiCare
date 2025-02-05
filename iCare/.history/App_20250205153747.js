@@ -65,11 +65,10 @@ function TabNavigator() {
         tabBarLabelStyle: {
           paddingBottom: 8,
           fontSize: 12,
-          fontWeight: "500",
-          marginTop: -4
+          fontWeight: "500"
         },
         tabBarIconStyle: {
-          marginTop: -4
+          marginTop: 4
         }
       }}
     >
@@ -87,7 +86,7 @@ function TabNavigator() {
         component={ChatScreen}
         options={{
           tabBarIcon: ({ color }) => (
-            <MaterialIcons name="chat" size={28} color={color} />
+            <MaterialIcons name="forum" size={28} color={color} />
           )
         }}
       />

@@ -11,34 +11,31 @@ import {
 import { MaterialIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 
-export default function HospitalList() {
+export default function PharmacyList() {
   const navigation = useNavigation();
-  const hospitals = [
+  const pharmacies = [
     {
-      type: "소아청소년과",
-      name: "메디아이소아청소년과",
+      name: "참마로 친절한 약국",
       status: "영업 중",
       hours: "11:00 ~ 21:00",
       distance: "1km",
-      address: "서울 노원구 상계로10길 7",
+      address: "서울시 영등포구 경인로 841",
       tel: "02-1234-5678"
     },
     {
-      type: "내과",
-      name: "속편한내과",
+      name: "바른약국",
       status: "영업 중",
       hours: "11:00 ~ 21:00",
       distance: "1km",
-      address: "서울 노원구 상계로10길 9",
+      address: "서울 도봉구 도봉로 511 1층",
       tel: "02-1234-5678"
     },
     {
-      type: "안과",
-      name: "누네안과의원",
+      name: "아이약국",
       status: "영업 중",
       hours: "11:00 ~ 21:00",
       distance: "1km",
-      address: "서울 노원구 노해로65길 14-3",
+      address: "서울 도봉구 도봉로 461 우림빌딩 1층",
       tel: "02-1234-5678"
     }
   ];
@@ -61,48 +58,27 @@ export default function HospitalList() {
         </View>
 
         <View style={styles.subHeader}>
-          <Text style={styles.pageTitle}>병원찾기</Text>
+          <Text style={styles.pageTitle}>약국찾기</Text>
           <TouchableOpacity style={styles.filterButton}>
             <Text style={styles.filterText}>가까운 순</Text>
-            <MaterialIcons
-              name="keyboard-arrow-down"
-              size={24}
-              color="#666666"
-            />
+            <MaterialIcons name="keyboard-arrow-down" size={24} color="#666666" />
           </TouchableOpacity>
         </View>
 
         <ScrollView style={styles.listContainer}>
-          {hospitals.map((hospital, index) => (
-            <TouchableOpacity key={index} style={styles.hospitalItem}>
-              <View style={styles.hospitalHeader}>
-                <View style={styles.typeLabel}>
-                  <Text style={styles.typeText}>{hospital.type}</Text>
-                </View>
-                <Text style={styles.hospitalName}>{hospital.name}</Text>
-              </View>
+          {pharmacies.map((pharmacy, index) => (
+            <TouchableOpacity key={index} style={styles.pharmacyItem}>
+              <Text style={styles.pharmacyName}>{pharmacy.name}</Text>
               <Text style={styles.statusText}>
-                <Text
-                  style={
-                    hospital.status === "영업 중"
-                      ? styles.openStatus
-                      : styles.closedStatus
-                  }
-                >
-                  {hospital.status}
-                </Text>
-                <Text style={styles.statusDivider}> | </Text>
-                {hospital.hours}
-                <Text style={styles.statusDivider}> | </Text>
-                {hospital.distance}
+                {pharmacy.status} | {pharmacy.hours} | {pharmacy.distance}
               </Text>
               <View style={styles.addressContainer}>
                 <MaterialIcons name="location-on" size={16} color="#666" />
-                <Text style={styles.addressText}>주소: {hospital.address}</Text>
+                <Text style={styles.addressText}>주소: {pharmacy.address}</Text>
               </View>
               <View style={styles.telContainer}>
                 <MaterialIcons name="phone" size={16} color="#666" />
-                <Text style={styles.telText}>전화: {hospital.tel}</Text>
+                <Text style={styles.telText}>전화: {pharmacy.tel}</Text>
               </View>
             </TouchableOpacity>
           ))}
@@ -167,11 +143,11 @@ const styles = StyleSheet.create({
   },
   listContainer: {
     flex: 1,
-    padding: 16
+    padding: 20
   },
-  hospitalItem: {
+  pharmacyItem: {
     marginBottom: 20,
-    padding: 16,
+    padding: 15,
     backgroundColor: "#fff",
     borderRadius: 10,
     elevation: 2,
@@ -183,49 +159,21 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 2
   },
-  hospitalHeader: {
-    marginBottom: 12
-  },
-  typeLabel: {
-    backgroundColor: "#E8FEEE",
-    paddingVertical: 4,
-    paddingHorizontal: 10,
-    borderRadius: 20,
-    alignSelf: "flex-start",
-    marginBottom: 8
-  },
-  typeText: {
-    color: "#016A4C",
-    fontSize: 14,
-    fontWeight: "600"
-  },
-  hospitalName: {
+  pharmacyName: {
     fontSize: 16,
     fontWeight: "bold",
-    color: "#222222"
-  },
-  openStatus: {
-    color: "#016A4C",
-    fontWeight: "600"
-  },
-  closedStatus: {
-    color: "#E53935",
-    fontWeight: "600"
-  },
-  statusDivider: {
-    color: "#CCCCCC"
+    marginBottom: 8
   },
   statusText: {
     color: "#666",
     fontSize: 14,
-    marginBottom: 12,
-    lineHeight: 20
+    marginBottom: 8
   },
   addressContainer: {
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    marginBottom: 8
+    marginBottom: 4
   },
   telContainer: {
     flexDirection: "row",
@@ -234,12 +182,10 @@ const styles = StyleSheet.create({
   },
   addressText: {
     color: "#666",
-    fontSize: 14,
-    flex: 1
+    fontSize: 14
   },
   telText: {
     color: "#666",
-    fontSize: 14,
-    flex: 1
+    fontSize: 14
   }
-});
+}); 

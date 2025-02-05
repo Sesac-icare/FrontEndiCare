@@ -1,0 +1,136 @@
+import React from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  SafeAreaView,
+  Image,
+  TextInput
+} from "react-native";
+import { MaterialIcons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
+
+export default function Login() {
+  const navigation = useNavigation();
+
+  return (
+    <SafeAreaView style={styles.safe}>
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <Image
+            source={require("../../assets/HeaderGreenLogo.png")}
+            style={styles.logo}
+            resizeMode="contain"
+          />
+        </View>
+
+        <View style={styles.content}>
+          <View style={styles.inputSection}>
+            <Text style={styles.label}>이메일</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="이메일을 입력해주세요"
+              placeholderTextColor="#999"
+            />
+          </View>
+
+          <View style={styles.inputSection}>
+            <Text style={styles.label}>비밀번호</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="비밀번호를 입력해주세요"
+              placeholderTextColor="#999"
+              secureTextEntry
+            />
+          </View>
+
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity 
+              style={styles.button}
+              onPress={() => navigation.navigate("SignUp")}
+            >
+              <Text style={styles.buttonText}>회원가입</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={[styles.button, styles.loginButton]}
+              onPress={() => navigation.navigate("MainTabs")}
+            >
+              <Text style={[styles.buttonText, styles.loginText]}>로그인</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  safe: {
+    flex: 1,
+    backgroundColor: "#fff"
+  },
+  container: {
+    flex: 1,
+    backgroundColor: "#fff"
+  },
+  header: {
+    height: 60,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    borderBottomWidth: 1,
+    borderBottomColor: "#f0f0f0",
+    backgroundColor: "#fff"
+  },
+  logo: {
+    width: 48,
+    height: 48
+  },
+  content: {
+    flex: 1,
+    padding: 20,
+    justifyContent: "center"
+  },
+  inputSection: {
+    marginBottom: 20
+  },
+  label: {
+    fontSize: 14,
+    color: "#016A4C",
+    marginBottom: 8,
+    fontWeight: "600"
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: "#E8E8E8",
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 14,
+    color: "#222222"
+  },
+  buttonContainer: {
+    marginTop: 30
+  },
+  button: {
+    backgroundColor: "#fff",
+    paddingVertical: 15,
+    borderRadius: 10,
+    marginBottom: 15,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#016A4C"
+  },
+  loginButton: {
+    backgroundColor: "#016A4C",
+  },
+  buttonText: {
+    fontSize: 16,
+    color: "#016A4C",
+    fontWeight: "600"
+  },
+  loginText: {
+    color: "#fff"
+  }
+}); 

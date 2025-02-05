@@ -10,8 +10,6 @@ import Splash from "./components/Splash";
 import HospitalList from "./components/HospitalList";
 import PharmacyList from "./components/PharmacyList";
 import MyPage from "./components/MyPage";
-import Login from "./components/auth/Login";
-import SignUp from "./components/auth/SignUp";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -116,8 +114,6 @@ const App = () => {
   return (
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="Login" component={Login} />
-        <Stack.Screen name="SignUp" component={SignUp} />
         <Stack.Screen name="MainTabs" component={TabNavigator} />
         <Stack.Screen name="HospitalList" component={HospitalList} />
         <Stack.Screen name="PharmacyList" component={PharmacyList} />

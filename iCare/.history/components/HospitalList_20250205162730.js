@@ -82,19 +82,7 @@ export default function HospitalList() {
                 <Text style={styles.hospitalName}>{hospital.name}</Text>
               </View>
               <Text style={styles.statusText}>
-                <Text
-                  style={
-                    hospital.status === "영업 중"
-                      ? styles.openStatus
-                      : styles.closedStatus
-                  }
-                >
-                  {hospital.status}
-                </Text>
-                <Text style={styles.statusDivider}> | </Text>
-                {hospital.hours}
-                <Text style={styles.statusDivider}> | </Text>
-                {hospital.distance}
+                {hospital.status} | {hospital.hours} | {hospital.distance}
               </Text>
               <View style={styles.addressContainer}>
                 <MaterialIcons name="location-on" size={16} color="#666" />
@@ -167,11 +155,11 @@ const styles = StyleSheet.create({
   },
   listContainer: {
     flex: 1,
-    padding: 16
+    padding: 20
   },
   hospitalItem: {
     marginBottom: 20,
-    padding: 16,
+    padding: 15,
     backgroundColor: "#fff",
     borderRadius: 10,
     elevation: 2,
@@ -184,48 +172,34 @@ const styles = StyleSheet.create({
     shadowRadius: 2
   },
   hospitalHeader: {
-    marginBottom: 12
+    marginBottom: 10
   },
   typeLabel: {
-    backgroundColor: "#E8FEEE",
+    backgroundColor: '#E8FEEE',  // 배경색 변경
     paddingVertical: 4,
-    paddingHorizontal: 10,
-    borderRadius: 20,
-    alignSelf: "flex-start",
-    marginBottom: 8
+    paddingHorizontal: 10,  // 좌우 패딩 약간 증가
+    borderRadius: 20,  // 더 둥근 모서리
+    alignSelf: 'flex-start',
+    marginBottom: 6
   },
   typeText: {
-    color: "#016A4C",
+    color: "#016A4C",  // 텍스트 색상 정확히 지정
     fontSize: 14,
-    fontWeight: "600"
+    fontWeight: "500"
   },
   hospitalName: {
     fontSize: 16,
     fontWeight: "bold",
-    color: "#222222"
-  },
-  openStatus: {
-    color: "#016A4C",
-    fontWeight: "600"
-  },
-  closedStatus: {
-    color: "#E53935",
-    fontWeight: "600"
-  },
-  statusDivider: {
-    color: "#CCCCCC"
+    color: "#000"
   },
   statusText: {
     color: "#666",
-    fontSize: 14,
-    marginBottom: 12,
-    lineHeight: 20
+    fontSize: 14
   },
   addressContainer: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
-    marginBottom: 8
+    gap: 4
   },
   telContainer: {
     flexDirection: "row",
@@ -234,12 +208,10 @@ const styles = StyleSheet.create({
   },
   addressText: {
     color: "#666",
-    fontSize: 14,
-    flex: 1
+    fontSize: 14
   },
   telText: {
     color: "#666",
-    fontSize: 14,
-    flex: 1
+    fontSize: 14
   }
 });

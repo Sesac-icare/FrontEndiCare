@@ -82,13 +82,7 @@ export default function HospitalList() {
                 <Text style={styles.hospitalName}>{hospital.name}</Text>
               </View>
               <Text style={styles.statusText}>
-                <Text
-                  style={
-                    hospital.status === "영업 중"
-                      ? styles.openStatus
-                      : styles.closedStatus
-                  }
-                >
+                <Text style={hospital.status === "영업 중" ? styles.openStatus : styles.closedStatus}>
                   {hospital.status}
                 </Text>
                 <Text style={styles.statusDivider}> | </Text>
@@ -167,7 +161,7 @@ const styles = StyleSheet.create({
   },
   listContainer: {
     flex: 1,
-    padding: 16
+    padding: 20
   },
   hospitalItem: {
     marginBottom: 20,
@@ -192,28 +186,28 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     borderRadius: 20,
     alignSelf: "flex-start",
-    marginBottom: 8
+    marginBottom: 6
   },
   typeText: {
     color: "#016A4C",
     fontSize: 14,
-    fontWeight: "600"
+    fontWeight: "500"
   },
   hospitalName: {
     fontSize: 16,
     fontWeight: "bold",
-    color: "#222222"
+    color: "#000"
   },
   openStatus: {
     color: "#016A4C",
-    fontWeight: "600"
+    fontWeight: "700",
   },
   closedStatus: {
     color: "#E53935",
-    fontWeight: "600"
+    fontWeight: "700",
   },
   statusDivider: {
-    color: "#CCCCCC"
+    color: "#CCCCCC",
   },
   statusText: {
     color: "#666",
@@ -225,7 +219,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    marginBottom: 8
+    marginBottom: 6
   },
   telContainer: {
     flexDirection: "row",
@@ -234,12 +228,10 @@ const styles = StyleSheet.create({
   },
   addressText: {
     color: "#666",
-    fontSize: 14,
-    flex: 1
+    fontSize: 14
   },
   telText: {
     color: "#666",
-    fontSize: 14,
-    flex: 1
+    fontSize: 14
   }
 });

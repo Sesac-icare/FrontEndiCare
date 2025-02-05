@@ -9,9 +9,6 @@ import Contents from "./components/Contents";
 import Splash from "./components/Splash";
 import HospitalList from "./components/HospitalList";
 import PharmacyList from "./components/PharmacyList";
-import MyPage from "./components/MyPage";
-import Login from "./components/auth/Login";
-import SignUp from "./components/auth/SignUp";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -23,6 +20,17 @@ const ChatScreen = () => (
       <Header />
       <View style={styles.center}>
         <Text>채팅 화면</Text>
+      </View>
+    </View>
+  </SafeAreaView>
+);
+
+const MyPageScreen = () => (
+  <SafeAreaView style={styles.safe}>
+    <View style={styles.container}>
+      <Header />
+      <View style={styles.center}>
+        <Text>마이페이지 화면</Text>
       </View>
     </View>
   </SafeAreaView>
@@ -86,7 +94,7 @@ function TabNavigator() {
       />
       <Tab.Screen
         name="마이페이지"
-        component={MyPage}
+        component={MyPageScreen}
         options={{
           tabBarIcon: ({ color }) => (
             <MaterialIcons name="person" size={28} color={color} />
@@ -116,8 +124,6 @@ const App = () => {
   return (
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="Login" component={Login} />
-        <Stack.Screen name="SignUp" component={SignUp} />
         <Stack.Screen name="MainTabs" component={TabNavigator} />
         <Stack.Screen name="HospitalList" component={HospitalList} />
         <Stack.Screen name="PharmacyList" component={PharmacyList} />

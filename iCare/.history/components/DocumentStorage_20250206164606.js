@@ -7,8 +7,7 @@ import {
   TouchableOpacity,
   Image,
   ScrollView,
-  Modal,
-  Platform
+  Modal
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
@@ -71,6 +70,18 @@ export default function DocumentStorage({ route }) {
                 처방전을 관리해보세요
               </Text>
               <Text style={styles.subText}>채팅으로도 등록할 수 있습니다.</Text>
+              <TouchableOpacity
+                style={styles.addButton}
+                onPress={() => navigation.navigate("RegisterPrescription")}
+              >
+                <MaterialIcons
+                  name="medication"
+                  size={24}
+                  color="#fff"
+                  style={styles.buttonIcon}
+                />
+                <Text style={styles.addButtonText}>약국봉투 등록하기</Text>
+              </TouchableOpacity>
             </View>
           ) : (
             prescriptions.map((prescription) => (
@@ -86,15 +97,11 @@ export default function DocumentStorage({ route }) {
                   <Text style={styles.childName}>{prescription.childName}</Text>
                 </View>
                 <Text style={styles.date}>{prescription.date}</Text>
-                <Text style={styles.pharmacyName}>
-                  {prescription.pharmacyName}
-                </Text>
-                <Text style={styles.documentId}>
-                  교부번호: {prescription.documentId}
-                </Text>
-                <MaterialIcons
-                  name="chevron-right"
-                  size={24}
+                <Text style={styles.pharmacyName}>{prescription.pharmacyName}</Text>
+                <Text style={styles.documentId}>교부번호: {prescription.documentId}</Text>
+                <MaterialIcons 
+                  name="chevron-right" 
+                  size={24} 
                   color="#CCCCCC"
                   style={styles.chevron}
                 />
@@ -102,17 +109,6 @@ export default function DocumentStorage({ route }) {
             ))
           )}
         </ScrollView>
-
-        {/* 하단에 고정된 버튼 */}
-        <View style={styles.bottomButtonContainer}>
-          <TouchableOpacity
-            style={styles.addButton}
-            onPress={() => navigation.navigate("RegisterPrescription")}
-          >
-            <MaterialIcons name="medication" size={24} color="#fff" />
-            <Text style={styles.addButtonText}>약국봉투 등록하기</Text>
-          </TouchableOpacity>
-        </View>
 
         {/* 이미지 보기 모달 */}
         <Modal
@@ -259,13 +255,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginBottom: 40
   },
-  bottomButtonContainer: {
-    padding: 20,
-    paddingBottom: Platform.OS === "ios" ? 34 : 24,
-    backgroundColor: "#fff",
-    borderTopWidth: 1,
-    borderTopColor: "#f0f0f0"
-  },
   addButton: {
     flexDirection: "row",
     alignItems: "center",
@@ -276,11 +265,14 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     width: "100%"
   },
+  buttonIcon: {
+    marginRight: 8
+  },
   addButtonText: {
     color: "#fff",
     fontSize: 16,
     fontWeight: "600",
-    marginLeft: 8
+    textAlign: "center"
   },
   prescriptionItem: {
     padding: 16,
@@ -290,28 +282,28 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff"
   },
   nameTag: {
-    backgroundColor: "#E8FEEE",
+    backgroundColor: '#f0f0f0',
     paddingVertical: 4,
     paddingHorizontal: 12,
     borderRadius: 12,
-    alignSelf: "flex-start",
+    alignSelf: 'flex-start',
     marginBottom: 8
   },
   childName: {
     fontSize: 14,
-    fontWeight: "600",
-    color: "#016A4C"
+    fontWeight: '600',
+    color: '#333'
   },
   pharmacyName: {
     fontSize: 16,
-    fontWeight: "700",
-    color: "#016A4C",
+    fontWeight: '700',
+    color: '#016A4C',
     marginBottom: 4
   },
   chevron: {
-    position: "absolute",
+    position: 'absolute',
     right: 20,
-    top: "50%",
+    top: '50%',
     marginTop: -12
   },
   date: {
@@ -324,11 +316,11 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     flex: 1,
-    backgroundColor: "#000"
+    backgroundColor: '#000'
   },
   modalHeader: {
     padding: 20,
-    position: "absolute",
+    position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
@@ -339,7 +331,7 @@ const styles = StyleSheet.create({
   },
   modalImage: {
     flex: 1,
-    width: "100%",
-    height: "100%"
+    width: '100%',
+    height: '100%'
   }
 });

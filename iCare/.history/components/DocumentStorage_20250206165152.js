@@ -7,8 +7,7 @@ import {
   TouchableOpacity,
   Image,
   ScrollView,
-  Modal,
-  Platform
+  Modal
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
@@ -60,6 +59,14 @@ export default function DocumentStorage({ route }) {
           </TouchableOpacity>
         </View>
 
+        <TouchableOpacity
+          style={styles.registerButton}
+          onPress={() => navigation.navigate("RegisterPrescription")}
+        >
+          <MaterialIcons name="add" size={24} color="#fff" />
+          <Text style={styles.registerButtonText}>약국봉투 입력하기</Text>
+        </TouchableOpacity>
+
         <ScrollView style={styles.content}>
           {prescriptions.length === 0 ? (
             <View style={styles.emptyContainer}>
@@ -71,6 +78,18 @@ export default function DocumentStorage({ route }) {
                 처방전을 관리해보세요
               </Text>
               <Text style={styles.subText}>채팅으로도 등록할 수 있습니다.</Text>
+              <TouchableOpacity
+                style={styles.addButton}
+                onPress={() => navigation.navigate("RegisterPrescription")}
+              >
+                <MaterialIcons
+                  name="medication"
+                  size={24}
+                  color="#fff"
+                  style={styles.buttonIcon}
+                />
+                <Text style={styles.addButtonText}>약국봉투 등록하기</Text>
+              </TouchableOpacity>
             </View>
           ) : (
             prescriptions.map((prescription) => (
@@ -102,17 +121,6 @@ export default function DocumentStorage({ route }) {
             ))
           )}
         </ScrollView>
-
-        {/* 하단에 고정된 버튼 */}
-        <View style={styles.bottomButtonContainer}>
-          <TouchableOpacity
-            style={styles.addButton}
-            onPress={() => navigation.navigate("RegisterPrescription")}
-          >
-            <MaterialIcons name="medication" size={24} color="#fff" />
-            <Text style={styles.addButtonText}>약국봉투 등록하기</Text>
-          </TouchableOpacity>
-        </View>
 
         {/* 이미지 보기 모달 */}
         <Modal
@@ -259,13 +267,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginBottom: 40
   },
-  bottomButtonContainer: {
-    padding: 20,
-    paddingBottom: Platform.OS === "ios" ? 34 : 24,
-    backgroundColor: "#fff",
-    borderTopWidth: 1,
-    borderTopColor: "#f0f0f0"
-  },
   addButton: {
     flexDirection: "row",
     alignItems: "center",
@@ -276,11 +277,14 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     width: "100%"
   },
+  buttonIcon: {
+    marginRight: 8
+  },
   addButtonText: {
     color: "#fff",
     fontSize: 16,
     fontWeight: "600",
-    marginLeft: 8
+    textAlign: "center"
   },
   prescriptionItem: {
     padding: 16,
@@ -341,5 +345,21 @@ const styles = StyleSheet.create({
     flex: 1,
     width: "100%",
     height: "100%"
+  },
+  registerButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#016A4C',
+    padding: 16,
+    marginHorizontal: 20,
+    marginVertical: 12,
+    borderRadius: 12
+  },
+  registerButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 8
   }
 });

@@ -12,7 +12,7 @@ import {
 import { MaterialIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import * as ImagePicker from "expo-image-picker";
-import * as Camera from "expo-camera";
+import { Camera } from "expo-camera";
 
 export default function RegisterPrescription() {
   const navigation = useNavigation();
@@ -26,10 +26,8 @@ export default function RegisterPrescription() {
 
   useEffect(() => {
     (async () => {
-      if (Platform.OS !== "web") {
-        const { status } = await Camera.requestCameraPermissionsAsync();
-        setCameraPermission(status === "granted");
-      }
+      const { status } = await Camera.getCameraPermissionsAsync();
+      setCameraPermission(status === "granted");
     })();
   }, []);
 
@@ -60,46 +58,57 @@ export default function RegisterPrescription() {
   };
 
   const getCameraPermission = async () => {
-    if (Platform.OS === "web") {
-      alert("웹에서는 카메라를 사용할 수 없습니다.");
-      return false;
-    }
-
     try {
-      if (!cameraPermission) {
-        const { status } = await Camera.requestCameraPermissionsAsync();
-        if (status !== "granted") {
-          alert(
-            "카메라를 사용하기 위해서는 권한이 필요합니다.\n설정에서 카메라 권한을 허용해주세요."
-          );
-          return false;
-        }
+      const { status: currentStatus } =
+        await Camera.getCameraPermissionsAsync();
+
+      if (currentStatus === "granted") {
         setCameraPermission(true);
+        return true;
       }
+
+      const { status } = await Camera.requestCameraPermissionsAsync();
+      const granted = status === "granted";
+      setCameraPermission(granted);
+
+      if (!granted) {
+        alert(
+          "카메라를 사용하기 위해서는 권한이 필요합니다.\n설정에서 카메라 권한을 허용해주세요."
+        );
+        return false;
+      }
+
       return true;
     } catch (error) {
       console.log("Camera permission error:", error);
-      alert("카메라 권한을 확인하는 중 오류가 발생했습니다.");
+      alert("카메라 권한을 확인할 수 없습니다. 앱을 다시 실행해주세요.");
       return false;
     }
   };
 
   const takePicture = async () => {
-    if (!cameraPermission) {
+    try {
       const hasPermission = await getCameraPermission();
-      if (!hasPermission) return;
+      if (hasPermission) {
+        setShowCamera(true);
+      }
+    } catch (error) {
+      console.log("Camera launch error:", error);
+      alert("카메라를 실행할 수 없습니다. 다시 시도해주세요.");
     }
-    setShowCamera(true);
   };
 
   const handleCapture = async () => {
-    if (!camera) return;
+    if (!camera) {
+      alert("카메라를 초기화할 수 없습니다. 다시 시도해주세요.");
+      return;
+    }
 
     try {
       setScanning(true);
       const photo = await camera.takePictureAsync({
         quality: 1,
-        skipProcessing: true // 처리 속도 향상
+        skipProcessing: true
       });
 
       if (photo) {
@@ -107,8 +116,8 @@ export default function RegisterPrescription() {
         setShowCamera(false);
       }
     } catch (error) {
-      console.log("Capture error:", error);
-      alert("사진 촬영에 실패했습니다.");
+      console.log("Photo capture error:", error);
+      alert("사진 촬영에 실패했습니다. 다시 시도해주세요.");
     } finally {
       setScanning(false);
     }
@@ -198,10 +207,7 @@ export default function RegisterPrescription() {
           <View style={styles.inputSection}>
             <Text style={styles.label}>자녀 이름</Text>
             <TextInput
-              style={[
-                styles.input,
-                (nameError || (image && !childName.trim())) && styles.inputError
-              ]}
+              style={[styles.input, nameError && styles.inputError]}
               placeholder="이름을 입력해주세요"
               placeholderTextColor="#999"
               value={childName}
@@ -210,7 +216,7 @@ export default function RegisterPrescription() {
                 setNameError(false);
               }}
             />
-            {(nameError || (image && !childName.trim())) && (
+            {nameError && (
               <Text style={styles.errorText}>자녀 이름을 입력해주세요</Text>
             )}
           </View>
@@ -301,14 +307,13 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
     padding: 20,
     borderBottomWidth: 1,
     borderBottomColor: "#f0f0f0",
-    backgroundColor: "#fff",
-    position: "relative"
+    backgroundColor: "#fff"
   },
   backButton: {
+    padding: 4,
     position: "absolute",
     left: 20,
     zIndex: 1
@@ -317,7 +322,9 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "600",
     color: "#222",
-    textAlign: "center"
+    textAlign: "center",
+    flex: 1,
+    marginLeft: 40 // 뒤로가기 버튼 공간만큼 여백
   },
   content: {
     flex: 1,

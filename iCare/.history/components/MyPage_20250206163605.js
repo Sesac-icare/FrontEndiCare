@@ -31,14 +31,12 @@ export default function MyPage() {
                 name="child-care"
                 size={24}
                 color="#016A4C"
-                style={styles.buttonIcon}
               />
               <Text style={styles.buttonText}>내 자녀 정보 찾기</Text>
               <MaterialIcons
                 name="chevron-right"
                 size={24}
                 color="#CCCCCC"
-                style={styles.arrowIcon}
               />
             </View>
           </TouchableOpacity>
@@ -52,14 +50,12 @@ export default function MyPage() {
                 name="medical-services"
                 size={24}
                 color="#016A4C"
-                style={styles.buttonIcon}
               />
               <Text style={styles.buttonText}>서류 보관함</Text>
               <MaterialIcons
                 name="chevron-right"
                 size={24}
                 color="#CCCCCC"
-                style={styles.arrowIcon}
               />
             </View>
           </TouchableOpacity>
@@ -129,21 +125,12 @@ const styles = StyleSheet.create({
     width: "100%",
     paddingHorizontal: 30
   },
-  buttonIcon: {
-    transform: [{ scale: 2 }],
-    marginLeft: 0
-  },
-  arrowIcon: {
-    transform: [{ scale: 2 }],
-    marginLeft: "auto"
-  },
   buttonText: {
     fontSize: 18,
     color: "#016A4C",
     fontWeight: "900",
     flex: 1,
-    textAlign: "center",
-    marginLeft: 0
+    textAlign: "center"
   },
   menuSection: {
     marginTop: 20,

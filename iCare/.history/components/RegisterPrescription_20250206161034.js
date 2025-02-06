@@ -26,9 +26,11 @@ export default function RegisterPrescription() {
 
   useEffect(() => {
     (async () => {
-      if (Platform.OS !== "web") {
+      try {
         const { status } = await Camera.requestCameraPermissionsAsync();
         setCameraPermission(status === "granted");
+      } catch (error) {
+        console.log("Initial camera permission error:", error);
       }
     })();
   }, []);
@@ -60,46 +62,51 @@ export default function RegisterPrescription() {
   };
 
   const getCameraPermission = async () => {
-    if (Platform.OS === "web") {
-      alert("웹에서는 카메라를 사용할 수 없습니다.");
-      return false;
-    }
-
     try {
-      if (!cameraPermission) {
-        const { status } = await Camera.requestCameraPermissionsAsync();
-        if (status !== "granted") {
-          alert(
-            "카메라를 사용하기 위해서는 권한이 필요합니다.\n설정에서 카메라 권한을 허용해주세요."
-          );
-          return false;
-        }
-        setCameraPermission(true);
+      const { status } = await Camera.requestCameraPermissionsAsync();
+      const granted = status === "granted";
+      setCameraPermission(granted);
+
+      if (!granted) {
+        alert("카메라를 사용하기 위해서는 권한이 필요합니다.");
+        return false;
       }
       return true;
     } catch (error) {
       console.log("Camera permission error:", error);
-      alert("카메라 권한을 확인하는 중 오류가 발생했습니다.");
       return false;
     }
   };
 
   const takePicture = async () => {
-    if (!cameraPermission) {
-      const hasPermission = await getCameraPermission();
-      if (!hasPermission) return;
+    try {
+      if (!cameraPermission) {
+        const hasPermission = await getCameraPermission();
+        if (!hasPermission) {
+          alert(
+            "카메라를 사용하기 위해서는 권한이 필요합니다.\n설정에서 카메라 권한을 허용해주세요."
+          );
+          return;
+        }
+      }
+      setShowCamera(true);
+    } catch (error) {
+      console.log("Camera launch error:", error);
+      alert("카메라를 실행할 수 없습니다. 다시 시도해주세요.");
     }
-    setShowCamera(true);
   };
 
   const handleCapture = async () => {
-    if (!camera) return;
+    if (!camera) {
+      alert("카메라를 초기화할 수 없습니다. 다시 시도해주세요.");
+      return;
+    }
 
     try {
       setScanning(true);
       const photo = await camera.takePictureAsync({
         quality: 1,
-        skipProcessing: true // 처리 속도 향상
+        skipProcessing: true
       });
 
       if (photo) {
@@ -107,8 +114,8 @@ export default function RegisterPrescription() {
         setShowCamera(false);
       }
     } catch (error) {
-      console.log("Capture error:", error);
-      alert("사진 촬영에 실패했습니다.");
+      console.log("Photo capture error:", error);
+      alert("사진 촬영에 실패했습니다. 다시 시도해주세요.");
     } finally {
       setScanning(false);
     }
@@ -121,34 +128,37 @@ export default function RegisterPrescription() {
       return;
     }
 
-    // 여기에 처방전 데이터 저장 로직 추가 예정
+    // 처방전 데이터 생성
     const prescriptionData = {
       childName: childName,
       imageUri: image,
-      date: new Date().toISOString().split("T")[0], // YYYY-MM-DD 형식
-      documentId: new Date().getTime().toString() // 임시 ID 생성
+      date: new Date().toISOString().split("T")[0],
+      pharmacyName: "행복약국", // OCR로 인식된 약국 이름
+      documentId: `${new Date().getFullYear()}${String(
+        new Date().getMonth() + 1
+      ).padStart(2, "0")}${String(new Date().getDate()).padStart(
+        2,
+        "0"
+      )}${String(Math.floor(Math.random() * 1000)).padStart(3, "0")}`
     };
 
-    // 데이터 저장 후 DocumentStorage 페이지로 이동
-    navigation.navigate("DocumentStorage", {
+    // DocumentStorage 페이지로 이동하면서 데이터 전달
+    navigation.replace("DocumentStorage", {
       newPrescription: prescriptionData
     });
   };
 
   if (showCamera) {
     return (
-      <Camera
-        style={styles.camera}
-        type={Camera.Constants.Type.back}
-        ref={(ref) => setCamera(ref)}
-        ratio="4:3"
-        autoFocus={Camera.Constants.AutoFocus.on}
-      >
+      <Camera style={styles.camera} type={1} ref={(ref) => setCamera(ref)}>
         <SafeAreaView style={styles.cameraContainer}>
           <View style={styles.cameraHeader}>
             <TouchableOpacity
               style={styles.closeButton}
-              onPress={() => setShowCamera(false)}
+              onPress={() => {
+                setShowCamera(false);
+                setCamera(null);
+              }}
             >
               <MaterialIcons name="close" size={24} color="#fff" />
             </TouchableOpacity>
@@ -198,10 +208,7 @@ export default function RegisterPrescription() {
           <View style={styles.inputSection}>
             <Text style={styles.label}>자녀 이름</Text>
             <TextInput
-              style={[
-                styles.input,
-                (nameError || (image && !childName.trim())) && styles.inputError
-              ]}
+              style={[styles.input, nameError && styles.inputError]}
               placeholder="이름을 입력해주세요"
               placeholderTextColor="#999"
               value={childName}
@@ -210,7 +217,7 @@ export default function RegisterPrescription() {
                 setNameError(false);
               }}
             />
-            {(nameError || (image && !childName.trim())) && (
+            {nameError && (
               <Text style={styles.errorText}>자녀 이름을 입력해주세요</Text>
             )}
           </View>
@@ -301,14 +308,13 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
     padding: 20,
     borderBottomWidth: 1,
     borderBottomColor: "#f0f0f0",
-    backgroundColor: "#fff",
-    position: "relative"
+    backgroundColor: "#fff"
   },
   backButton: {
+    padding: 4,
     position: "absolute",
     left: 20,
     zIndex: 1
@@ -317,7 +323,9 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "600",
     color: "#222",
-    textAlign: "center"
+    textAlign: "center",
+    flex: 1,
+    marginLeft: 40 // 뒤로가기 버튼 공간만큼 여백
   },
   content: {
     flex: 1,

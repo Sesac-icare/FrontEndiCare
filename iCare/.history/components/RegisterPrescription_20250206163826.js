@@ -198,10 +198,7 @@ export default function RegisterPrescription() {
           <View style={styles.inputSection}>
             <Text style={styles.label}>자녀 이름</Text>
             <TextInput
-              style={[
-                styles.input,
-                (nameError || (image && !childName.trim())) && styles.inputError
-              ]}
+              style={[styles.input, nameError && styles.inputError]}
               placeholder="이름을 입력해주세요"
               placeholderTextColor="#999"
               value={childName}
@@ -210,7 +207,7 @@ export default function RegisterPrescription() {
                 setNameError(false);
               }}
             />
-            {(nameError || (image && !childName.trim())) && (
+            {nameError && (
               <Text style={styles.errorText}>자녀 이름을 입력해주세요</Text>
             )}
           </View>

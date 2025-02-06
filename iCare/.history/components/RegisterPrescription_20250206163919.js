@@ -121,15 +121,15 @@ export default function RegisterPrescription() {
       return;
     }
 
-    // 여기에 처방전 데이터 저장 로직 추가 예정
+    // 처방전 데이터 생성
     const prescriptionData = {
       childName: childName,
       imageUri: image,
-      date: new Date().toISOString().split("T")[0], // YYYY-MM-DD 형식
-      documentId: new Date().getTime().toString() // 임시 ID 생성
+      date: "2024.02.15",
+      pharmacyName: "행복약국",
+      documentId: "202402501"
     };
 
-    // 데이터 저장 후 DocumentStorage 페이지로 이동
     navigation.navigate("DocumentStorage", {
       newPrescription: prescriptionData
     });
@@ -198,10 +198,7 @@ export default function RegisterPrescription() {
           <View style={styles.inputSection}>
             <Text style={styles.label}>자녀 이름</Text>
             <TextInput
-              style={[
-                styles.input,
-                (nameError || (image && !childName.trim())) && styles.inputError
-              ]}
+              style={[styles.input, nameError && styles.inputError]}
               placeholder="이름을 입력해주세요"
               placeholderTextColor="#999"
               value={childName}
@@ -210,7 +207,7 @@ export default function RegisterPrescription() {
                 setNameError(false);
               }}
             />
-            {(nameError || (image && !childName.trim())) && (
+            {nameError && (
               <Text style={styles.errorText}>자녀 이름을 입력해주세요</Text>
             )}
           </View>

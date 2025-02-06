@@ -111,7 +111,7 @@ const styles = StyleSheet.create({
   buttonCard: {
     backgroundColor: "#fff",
     paddingVertical: 80,
-    width: "100%",
+    paddingHorizontal: 20,
     borderRadius: 10,
     marginBottom: 30,
     elevation: 2,
@@ -127,15 +127,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     width: "100%",
-    paddingHorizontal: 30
+    justifyContent: "space-between"
   },
   buttonIcon: {
     transform: [{ scale: 2 }],
-    marginLeft: 0
-  },
-  arrowIcon: {
-    transform: [{ scale: 2 }],
-    marginLeft: "auto"
+    marginLeft: 20
   },
   buttonText: {
     fontSize: 18,
@@ -143,7 +139,12 @@ const styles = StyleSheet.create({
     fontWeight: "900",
     flex: 1,
     textAlign: "center",
-    marginLeft: 0
+    marginLeft: -20
+  },
+  arrowIcon: {
+    transform: [{ scale: 2 }],
+    marginLeft: "auto",
+    marginRight: 20
   },
   menuSection: {
     marginTop: 20,

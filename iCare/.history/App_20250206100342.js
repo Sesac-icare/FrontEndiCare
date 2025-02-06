@@ -80,7 +80,7 @@ function TabNavigator() {
         component={ChatScreen}
         options={{
           tabBarIcon: ({ color }) => (
-            <MaterialIcons name="forum" size={28} color={color} />
+            <MaterialIcons name="forum-bubble" size={28} color={color} />
           )
         }}
       />

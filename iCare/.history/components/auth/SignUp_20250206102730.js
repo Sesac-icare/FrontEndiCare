@@ -16,76 +16,18 @@ import { useNavigation } from "@react-navigation/native";
 export default function SignUp() {
   const navigation = useNavigation();
   const [showModal, setShowModal] = useState(false);
-  const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [passwordCheck, setPasswordCheck] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordMismatch, setPasswordMismatch] = useState(false);
-  const [showConfirmIcon, setShowConfirmIcon] = useState(false);
-  const [termAgreed, setTermAgreed] = useState(false);
 
   const handleSignUp = () => {
-    if (!username || !email || !password || !passwordCheck) {
-      alert("모든 필드를 입력해주세요.");
-      return;
-    }
-
-    if (passwordMismatch) {
-      alert("비밀번호가 일치하지 않습니다.");
-      return;
-    }
-
-    const signUpData = {
-      username,
-      email,
-      password,
-      passwordCheck,
-      term_agreed: termAgreed
-    };
-
-    fetch('api/users/register', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(signUpData)
-    })
-    .then(response => response.json())
-    .then(data => {
-      if (data.email) {
-        setShowModal(true);
-      }
-    })
-    .catch(error => {
-      if (error.response?.status === 400) {
-        if (error.response.data.email) {
-          alert("이미 사용 중인 이메일입니다.");
-        } else if (error.response.data.password) {
-          alert("비밀번호가 일치하지 않습니다.");
-        }
-      }
-    });
-  };
-
-  const handleAgree = () => {
-    setTermAgreed(true);
-    setShowModal(false);
-    navigation.navigate("MainTabs");
+    setShowModal(true);
   };
 
   // 비밀번호 확인 입력 시 일치 여부 체크
   const checkPasswordMatch = (text) => {
-    setPasswordCheck(text);
+    setConfirmPassword(text);
     setPasswordMismatch(password !== text);
-    setShowConfirmIcon(text.length > 0);
-  };
-
-  // 이메일 중복 체크 함수
-  const checkEmailDuplicate = (text) => {
-    setEmail(text);
-    // 예시로 특정 이메일을 중복으로 설정
-    const duplicateEmails = ["test@test.com", "example@example.com"];
-    setIsEmailDuplicate(duplicateEmails.includes(text));
   };
 
   return (
@@ -112,35 +54,16 @@ export default function SignUp() {
               style={styles.input}
               placeholder="이름을 입력해주세요"
               placeholderTextColor="#999"
-              value={username}
-              onChangeText={setUsername}
             />
           </View>
 
           <View style={styles.inputSection}>
             <Text style={styles.label}>이메일</Text>
-            <View style={styles.passwordInputContainer}>
-              <TextInput
-                style={[styles.input, styles.passwordInput]}
-                placeholder="이메일을 입력해주세요"
-                placeholderTextColor="#999"
-                value={email}
-                onChangeText={checkEmailDuplicate}
-                keyboardType="email-address"
-                autoCapitalize="none"
-              />
-              {email.length > 0 && (
-                <MaterialIcons
-                  name={isEmailDuplicate ? "error" : "check-circle"}
-                  size={20}
-                  color={isEmailDuplicate ? "#E53935" : "#016A4C"}
-                  style={styles.errorIcon}
-                />
-              )}
-            </View>
-            {isEmailDuplicate && (
-              <Text style={styles.errorText}>이미 사용 중인 이메일입니다.</Text>
-            )}
+            <TextInput
+              style={styles.input}
+              placeholder="이메일을 입력해주세요"
+              placeholderTextColor="#999"
+            />
           </View>
 
           <View style={styles.inputSection}>
@@ -153,8 +76,8 @@ export default function SignUp() {
               value={password}
               onChangeText={(text) => {
                 setPassword(text);
-                if (passwordCheck) {
-                  setPasswordMismatch(password !== text);
+                if (confirmPassword) {
+                  setPasswordMismatch(confirmPassword !== text);
                 }
               }}
             />
@@ -168,14 +91,14 @@ export default function SignUp() {
                 placeholder="비밀번호를 다시 한 번 입력해주세요"
                 placeholderTextColor="#999"
                 secureTextEntry
-                value={passwordCheck}
+                value={confirmPassword}
                 onChangeText={checkPasswordMatch}
               />
-              {showConfirmIcon && (
+              {passwordMismatch && (
                 <MaterialIcons
-                  name={passwordMismatch ? "error" : "check-circle"}
+                  name="error"
                   size={20}
-                  color={passwordMismatch ? "#E53935" : "#016A4C"}
+                  color="#E53935"
                   style={styles.errorIcon}
                 />
               )}
@@ -219,7 +142,10 @@ export default function SignUp() {
 
               <TouchableOpacity
                 style={styles.agreeButton}
-                onPress={handleAgree}
+                onPress={() => {
+                  setShowModal(false);
+                  navigation.navigate("MainTabs");
+                }}
               >
                 <Text style={styles.agreeButtonText}>동의하기</Text>
               </TouchableOpacity>

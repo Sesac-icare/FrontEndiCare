@@ -23,23 +23,13 @@ export default function DocumentStorage({ route }) {
 
   useEffect(() => {
     if (route.params?.newPrescription) {
-      // 새로운 처방전의 고유 ID 생성
-      const newPrescriptionWithId = {
-        ...route.params.newPrescription,
-        id: Date.now().toString() // 고유한 id 추가
-      };
-
-      // 기존 처방전 목록에 새로운 처방전 추가
-      setPrescriptions((prevPrescriptions) => {
-        // 중복 체크
-        const isDuplicate = prevPrescriptions.some(
-          (p) => p.id === newPrescriptionWithId.id
-        );
-
-        if (!isDuplicate) {
-          return [newPrescriptionWithId, ...prevPrescriptions];
-        }
-        return prevPrescriptions;
+      setPrescriptions(prevPrescriptions => {
+        const newPrescription = {
+          ...route.params.newPrescription,
+          documentId: `${new Date().getTime()}${Math.floor(Math.random() * 1000)}` // 고유한 documentId 생성
+        };
+        
+        return [newPrescription, ...prevPrescriptions];
       });
     }
   }, [route.params?.newPrescription]);
@@ -50,8 +40,8 @@ export default function DocumentStorage({ route }) {
   };
 
   const confirmDelete = () => {
-    setPrescriptions((prevPrescriptions) =>
-      prevPrescriptions.filter((p) => p.id !== selectedPrescription.id)
+    setPrescriptions(prevPrescriptions => 
+      prevPrescriptions.filter(p => p.documentId !== selectedPrescription.documentId)
     );
     setShowDeleteModal(false);
     setSelectedPrescription(null);

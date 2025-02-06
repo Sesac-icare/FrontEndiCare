@@ -106,7 +106,7 @@ export default function DocumentStorage({ route }) {
           ) : (
             prescriptions.map((prescription) => (
               <TouchableOpacity
-                key={prescription.documentId}
+                key={prescription.id}
                 style={styles.prescriptionItem}
                 onPress={() => {
                   setSelectedImage(prescription.imageUri);
@@ -124,7 +124,7 @@ export default function DocumentStorage({ route }) {
                     {prescription.pharmacyName}
                   </Text>
                   <Text style={styles.documentId}>
-                    교부번호: {prescription.documentId}
+                    교부번호: {prescription.id}
                   </Text>
                 </View>
                 <View style={styles.itemActions}>

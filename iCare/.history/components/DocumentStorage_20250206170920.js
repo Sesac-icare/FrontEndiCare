@@ -19,28 +19,35 @@ export default function DocumentStorage({ route }) {
   const [showImageModal, setShowImageModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedPrescription, setSelectedPrescription] = useState(null);
-  const [prescriptions, setPrescriptions] = useState([]);
+  const [prescriptions, setPrescriptions] = useState([
+    // 초기 데이터 예시
+    {
+      childName: "최지수",
+      date: "2024.02.15",
+      pharmacyName: "행복약국",
+      documentId: "202402501"
+    },
+    {
+      childName: "최지유",
+      date: "2024.02.15",
+      pharmacyName: "건강약국",
+      documentId: "202402501"
+    },
+    {
+      childName: "최지인",
+      date: "2024.02.15",
+      pharmacyName: "행복약국",
+      documentId: "202402501"
+    }
+  ]);
 
   useEffect(() => {
     if (route.params?.newPrescription) {
-      // 새로운 처방전의 고유 ID 생성
-      const newPrescriptionWithId = {
-        ...route.params.newPrescription,
-        id: Date.now().toString() // 고유한 id 추가
-      };
-
-      // 기존 처방전 목록에 새로운 처방전 추가
-      setPrescriptions((prevPrescriptions) => {
-        // 중복 체크
-        const isDuplicate = prevPrescriptions.some(
-          (p) => p.id === newPrescriptionWithId.id
-        );
-
-        if (!isDuplicate) {
-          return [newPrescriptionWithId, ...prevPrescriptions];
-        }
-        return prevPrescriptions;
-      });
+      // 기존 처방전 목록을 유지하면서 새로운 처방전 추가
+      setPrescriptions((prevPrescriptions) => [
+        route.params.newPrescription, // 새로운 처방전
+        ...prevPrescriptions // 기존 처방전들
+      ]);
     }
   }, [route.params?.newPrescription]);
 
@@ -51,7 +58,9 @@ export default function DocumentStorage({ route }) {
 
   const confirmDelete = () => {
     setPrescriptions((prevPrescriptions) =>
-      prevPrescriptions.filter((p) => p.id !== selectedPrescription.id)
+      prevPrescriptions.filter(
+        (p) => p.documentId !== selectedPrescription.documentId
+      )
     );
     setShowDeleteModal(false);
     setSelectedPrescription(null);

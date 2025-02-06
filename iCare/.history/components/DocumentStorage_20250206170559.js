@@ -19,28 +19,35 @@ export default function DocumentStorage({ route }) {
   const [showImageModal, setShowImageModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedPrescription, setSelectedPrescription] = useState(null);
-  const [prescriptions, setPrescriptions] = useState([]);
+  const [prescriptions, setPrescriptions] = useState([
+    // 초기 데이터 예시
+    {
+      childName: "최지수",
+      date: "2024.02.15",
+      pharmacyName: "행복약국",
+      documentId: "202402501"
+    },
+    {
+      childName: "최지유",
+      date: "2024.02.15",
+      pharmacyName: "건강약국",
+      documentId: "202402501"
+    },
+    {
+      childName: "최지인",
+      date: "2024.02.15",
+      pharmacyName: "행복약국",
+      documentId: "202402501"
+    }
+  ]);
 
   useEffect(() => {
     if (route.params?.newPrescription) {
-      // 새로운 처방전의 고유 ID 생성
-      const newPrescriptionWithId = {
-        ...route.params.newPrescription,
-        id: Date.now().toString() // 고유한 id 추가
-      };
-
-      // 기존 처방전 목록에 새로운 처방전 추가
-      setPrescriptions((prevPrescriptions) => {
-        // 중복 체크
-        const isDuplicate = prevPrescriptions.some(
-          (p) => p.id === newPrescriptionWithId.id
-        );
-
-        if (!isDuplicate) {
-          return [newPrescriptionWithId, ...prevPrescriptions];
-        }
-        return prevPrescriptions;
-      });
+      // 기존 처방전 목록을 유지하면서 새로운 처방전 추가
+      setPrescriptions(prevPrescriptions => [
+        route.params.newPrescription,  // 새로운 처방전
+        ...prevPrescriptions  // 기존 처방전들
+      ]);
     }
   }, [route.params?.newPrescription]);
 
@@ -50,8 +57,8 @@ export default function DocumentStorage({ route }) {
   };
 
   const confirmDelete = () => {
-    setPrescriptions((prevPrescriptions) =>
-      prevPrescriptions.filter((p) => p.id !== selectedPrescription.id)
+    setPrescriptions(prevPrescriptions => 
+      prevPrescriptions.filter(p => p.documentId !== selectedPrescription.documentId)
     );
     setShowDeleteModal(false);
     setSelectedPrescription(null);
@@ -115,36 +122,26 @@ export default function DocumentStorage({ route }) {
               >
                 <View style={styles.itemContent}>
                   <View style={styles.nameTag}>
-                    <Text style={styles.childName}>
-                      {prescription.childName}
-                    </Text>
+                    <Text style={styles.childName}>{prescription.childName}</Text>
                   </View>
                   <Text style={styles.date}>{prescription.date}</Text>
-                  <Text style={styles.pharmacyName}>
-                    {prescription.pharmacyName}
-                  </Text>
-                  <Text style={styles.documentId}>
-                    교부번호: {prescription.documentId}
-                  </Text>
+                  <Text style={styles.pharmacyName}>{prescription.pharmacyName}</Text>
+                  <Text style={styles.documentId}>교부번호: {prescription.documentId}</Text>
                 </View>
                 <View style={styles.itemActions}>
-                  <MaterialIcons
-                    name="chevron-right"
-                    size={24}
-                    color="#CCCCCC"
-                    style={styles.chevron}
-                  />
-                  <TouchableOpacity
-                    style={styles.deleteButton}
-                    onPress={() => handleDelete(prescription)}
-                  >
-                    <MaterialIcons
-                      name="delete-outline"
-                      size={24}
-                      color="#FF4444"
-                    />
-                  </TouchableOpacity>
-                </View>
+                <Text style={styles.date}>{prescription.date}</Text>
+                <Text style={styles.pharmacyName}>
+                  {prescription.pharmacyName}
+                </Text>
+                <Text style={styles.documentId}>
+                  교부번호: {prescription.documentId}
+                </Text>
+                <MaterialIcons
+                  name="chevron-right"
+                  size={24}
+                  color="#CCCCCC"
+                  style={styles.chevron}
+                />
               </TouchableOpacity>
             ))
           )}
@@ -182,39 +179,6 @@ export default function DocumentStorage({ route }) {
               style={styles.modalImage}
               resizeMode="contain"
             />
-          </View>
-        </Modal>
-
-        {/* 삭제 확인 모달 */}
-        <Modal
-          visible={showDeleteModal}
-          transparent={true}
-          animationType="fade"
-          onRequestClose={() => setShowDeleteModal(false)}
-        >
-          <View style={styles.modalOverlay}>
-            <View style={styles.deleteModalContent}>
-              <Text style={styles.deleteModalTitle}>
-                처방전을 삭제하시겠습니까?
-              </Text>
-              <Text style={styles.deleteModalSubtitle}>
-                삭제된 처방전은 복구할 수 없습니다.
-              </Text>
-              <View style={styles.deleteModalButtons}>
-                <TouchableOpacity
-                  style={[styles.deleteModalButton, styles.cancelButton]}
-                  onPress={() => setShowDeleteModal(false)}
-                >
-                  <Text style={styles.cancelButtonText}>취소</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.deleteModalButton, styles.confirmButton]}
-                  onPress={confirmDelete}
-                >
-                  <Text style={styles.confirmButtonText}>삭제</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
           </View>
         </Modal>
       </View>
@@ -299,8 +263,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#f9fafb"
   },
   content: {
-    padding: 20,
-    backgroundColor: "#f9fafb"
+    padding: 20
   },
   emptyContainer: {
     alignItems: "center",
@@ -364,64 +327,44 @@ const styles = StyleSheet.create({
     marginLeft: 8
   },
   prescriptionItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#fff",
-    marginBottom: 12,
-    padding: 20,
-    borderRadius: 16,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2
-    },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 3
-  },
-  itemContent: {
-    flex: 1
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f0f0f0",
+    width: "100%",
+    backgroundColor: "#fff"
   },
   nameTag: {
     backgroundColor: "#E8FEEE",
-    paddingVertical: 6,
+    paddingVertical: 4,
     paddingHorizontal: 12,
-    borderRadius: 8,
+    borderRadius: 12,
     alignSelf: "flex-start",
-    marginBottom: 12
+    marginBottom: 8
   },
   childName: {
     fontSize: 14,
     fontWeight: "600",
     color: "#016A4C"
   },
-  date: {
-    fontSize: 15,
-    color: "#333",
-    marginBottom: 4
-  },
   pharmacyName: {
     fontSize: 16,
     fontWeight: "700",
     color: "#016A4C",
-    marginBottom: 6
+    marginBottom: 4
+  },
+  chevron: {
+    position: "absolute",
+    right: 20,
+    top: "50%",
+    marginTop: -12
+  },
+  date: {
+    fontSize: 14,
+    color: "#666"
   },
   documentId: {
     fontSize: 14,
     color: "#666"
-  },
-  itemActions: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8
-  },
-  deleteButton: {
-    padding: 8,
-    backgroundColor: "#FFF2F2",
-    borderRadius: 8
-  },
-  chevron: {
-    color: "#CCCCCC"
   },
   modalContainer: {
     flex: 1,
@@ -442,65 +385,5 @@ const styles = StyleSheet.create({
     flex: 1,
     width: "100%",
     height: "100%"
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    justifyContent: "center",
-    alignItems: "center"
-  },
-  deleteModalContent: {
-    backgroundColor: "#fff",
-    borderRadius: 16,
-    padding: 24,
-    width: "85%",
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 4
-    },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 8
-  },
-  deleteModalTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#222",
-    marginBottom: 8
-  },
-  deleteModalSubtitle: {
-    fontSize: 15,
-    color: "#666",
-    marginBottom: 24,
-    textAlign: "center"
-  },
-  deleteModalButtons: {
-    flexDirection: "row",
-    gap: 12,
-    width: "100%"
-  },
-  deleteModalButton: {
-    flex: 1,
-    paddingVertical: 14,
-    borderRadius: 12,
-    alignItems: "center"
-  },
-  cancelButton: {
-    backgroundColor: "#f5f5f5"
-  },
-  confirmButton: {
-    backgroundColor: "#FF4444"
-  },
-  cancelButtonText: {
-    color: "#444",
-    fontSize: 16,
-    fontWeight: "600"
-  },
-  confirmButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "600"
   }
 });

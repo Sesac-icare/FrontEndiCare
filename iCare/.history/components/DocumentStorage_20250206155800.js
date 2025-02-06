@@ -48,11 +48,7 @@ export default function DocumentStorage({ route }) {
           </View>
           <TouchableOpacity style={styles.filterButton}>
             <Text style={styles.filterText}>최신순</Text>
-            <MaterialIcons
-              name="keyboard-arrow-down"
-              size={24}
-              color="#666666"
-            />
+            <MaterialIcons name="keyboard-arrow-down" size={24} color="#666666" />
           </TouchableOpacity>
         </View>
 
@@ -91,11 +87,7 @@ export default function DocumentStorage({ route }) {
               >
                 <View style={styles.itemHeader}>
                   <Text style={styles.childName}>{prescription.childName}</Text>
-                  <MaterialIcons
-                    name="chevron-right"
-                    size={24}
-                    color="#CCCCCC"
-                  />
+                  <MaterialIcons name="chevron-right" size={24} color="#CCCCCC" />
                 </View>
                 <Text style={styles.date}>{prescription.date}</Text>
                 <Text style={styles.documentId}>

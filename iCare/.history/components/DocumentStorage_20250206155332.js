@@ -57,53 +57,25 @@ export default function DocumentStorage({ route }) {
         </View>
 
         <ScrollView style={styles.content}>
-          {prescriptions.length === 0 ? (
-            <View style={styles.emptyContainer}>
-              <View style={styles.iconContainer}>
-                <MaterialIcons name="description" size={80} color="#CCCCCC" />
+          {prescriptions.map((prescription) => (
+            <TouchableOpacity
+              key={prescription.documentId}
+              style={styles.prescriptionItem}
+              onPress={() => {
+                /* 상세보기 처리 */
+              }}
+            >
+              <View style={styles.itemHeader}>
+                <Text style={styles.childName}>{prescription.childName}</Text>
+                <MaterialIcons name="chevron-right" size={24} color="#CCCCCC" />
               </View>
-              <Text style={styles.emptyText}>
-                약국봉투를 등록하고{"\n"}
-                처방전을 관리해보세요
+              <Text style={styles.date}>{prescription.date}</Text>
+              <Text style={styles.pharmacyName}>{prescription.pharmacyName}</Text>
+              <Text style={styles.documentId}>
+                교부번호: {prescription.documentId}
               </Text>
-              <Text style={styles.subText}>채팅으로도 등록할 수 있습니다.</Text>
-              <TouchableOpacity
-                style={styles.addButton}
-                onPress={() => navigation.navigate("RegisterPrescription")}
-              >
-                <MaterialIcons
-                  name="medication"
-                  size={24}
-                  color="#fff"
-                  style={styles.buttonIcon}
-                />
-                <Text style={styles.addButtonText}>약국봉투 등록하기</Text>
-              </TouchableOpacity>
-            </View>
-          ) : (
-            prescriptions.map((prescription) => (
-              <TouchableOpacity
-                key={prescription.documentId}
-                style={styles.prescriptionItem}
-                onPress={() => {
-                  /* 상세보기 처리 */
-                }}
-              >
-                <View style={styles.itemHeader}>
-                  <Text style={styles.childName}>{prescription.childName}</Text>
-                  <MaterialIcons
-                    name="chevron-right"
-                    size={24}
-                    color="#CCCCCC"
-                  />
-                </View>
-                <Text style={styles.date}>{prescription.date}</Text>
-                <Text style={styles.documentId}>
-                  교부번호: {prescription.documentId}
-                </Text>
-              </TouchableOpacity>
-            ))
-          )}
+            </TouchableOpacity>
+          ))}
         </ScrollView>
       </View>
     </SafeAreaView>
@@ -182,12 +154,12 @@ const styles = StyleSheet.create({
     color: "#666",
     marginRight: 4
   },
-  contentWrapper: {
-    flex: 1,
-    backgroundColor: "#f9fafb"
-  },
   content: {
-    padding: 20
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+    backgroundColor: "#f9fafb"
   },
   emptyContainer: {
     alignItems: "center",
@@ -247,28 +219,40 @@ const styles = StyleSheet.create({
     textAlign: "center"
   },
   prescriptionItem: {
-    padding: 16,
+    backgroundColor: '#fff',
+    padding: 20,
+    marginBottom: 12,
     borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
-    width: "100%",
-    backgroundColor: "#fff"
+    borderBottomColor: '#E8E8E8'
   },
   itemHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center"
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8
   },
   childName: {
     fontSize: 16,
-    fontWeight: "600",
-    color: "#333"
+    fontWeight: '600',
+    color: '#333',
+    backgroundColor: '#f0f0f0',
+    paddingVertical: 4,
+    paddingHorizontal: 12,
+    borderRadius: 12
   },
   date: {
-    fontSize: 14,
-    color: "#666"
+    fontSize: 16,
+    color: '#222',
+    marginBottom: 4
+  },
+  pharmacyName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#016A4C',
+    marginBottom: 4
   },
   documentId: {
     fontSize: 14,
-    color: "#666"
+    color: '#666'
   }
 });

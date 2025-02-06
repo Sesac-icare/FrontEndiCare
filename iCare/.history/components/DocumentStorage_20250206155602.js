@@ -56,54 +56,28 @@ export default function DocumentStorage({ route }) {
           </TouchableOpacity>
         </View>
 
-        <ScrollView style={styles.content}>
-          {prescriptions.length === 0 ? (
-            <View style={styles.emptyContainer}>
-              <View style={styles.iconContainer}>
-                <MaterialIcons name="description" size={80} color="#CCCCCC" />
+        <ScrollView 
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollViewContent}
+        >
+          {prescriptions.map((prescription) => (
+            <TouchableOpacity
+              key={prescription.documentId}
+              style={styles.prescriptionItem}
+              onPress={() => {
+                /* 상세보기 처리 */
+              }}
+            >
+              <View style={styles.itemHeader}>
+                <Text style={styles.childName}>{prescription.childName}</Text>
+                <MaterialIcons name="chevron-right" size={24} color="#CCCCCC" />
               </View>
-              <Text style={styles.emptyText}>
-                약국봉투를 등록하고{"\n"}
-                처방전을 관리해보세요
+              <Text style={styles.date}>{prescription.date}</Text>
+              <Text style={styles.documentId}>
+                교부번호: {prescription.documentId}
               </Text>
-              <Text style={styles.subText}>채팅으로도 등록할 수 있습니다.</Text>
-              <TouchableOpacity
-                style={styles.addButton}
-                onPress={() => navigation.navigate("RegisterPrescription")}
-              >
-                <MaterialIcons
-                  name="medication"
-                  size={24}
-                  color="#fff"
-                  style={styles.buttonIcon}
-                />
-                <Text style={styles.addButtonText}>약국봉투 등록하기</Text>
-              </TouchableOpacity>
-            </View>
-          ) : (
-            prescriptions.map((prescription) => (
-              <TouchableOpacity
-                key={prescription.documentId}
-                style={styles.prescriptionItem}
-                onPress={() => {
-                  /* 상세보기 처리 */
-                }}
-              >
-                <View style={styles.itemHeader}>
-                  <Text style={styles.childName}>{prescription.childName}</Text>
-                  <MaterialIcons
-                    name="chevron-right"
-                    size={24}
-                    color="#CCCCCC"
-                  />
-                </View>
-                <Text style={styles.date}>{prescription.date}</Text>
-                <Text style={styles.documentId}>
-                  교부번호: {prescription.documentId}
-                </Text>
-              </TouchableOpacity>
-            ))
-          )}
+            </TouchableOpacity>
+          ))}
         </ScrollView>
       </View>
     </SafeAreaView>
@@ -182,12 +156,17 @@ const styles = StyleSheet.create({
     color: "#666",
     marginRight: 4
   },
-  contentWrapper: {
+  scrollView: {
     flex: 1,
-    backgroundColor: "#f9fafb"
+    backgroundColor: "#f9fafb",
+    padding: 20
+  },
+  scrollViewContent: {
+    flexGrow: 1
   },
   content: {
-    padding: 20
+    flex: 1,
+    backgroundColor: "#f9fafb"
   },
   emptyContainer: {
     alignItems: "center",

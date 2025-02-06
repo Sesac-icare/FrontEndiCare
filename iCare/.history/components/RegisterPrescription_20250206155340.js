@@ -42,6 +42,20 @@ export default function RegisterPrescription() {
     return true;
   };
 
+  const handleImageProcessing = async (imageUri) => {
+    setScanning(true);
+    try {
+      // 여기에 OCR 처리 로직 추가
+      // 실제로는 서버로 이미지를 보내고 OCR 결과를 받아와야 함
+      setImage(imageUri);
+    } catch (error) {
+      console.log("OCR processing error:", error);
+      alert("처방전 인식에 실패했습니다. 다시 시도해주세요.");
+    } finally {
+      setScanning(false);
+    }
+  };
+
   const pickImage = async () => {
     const hasPermission = await getPermission();
     if (!hasPermission) return;
@@ -54,8 +68,7 @@ export default function RegisterPrescription() {
     });
 
     if (!result.canceled) {
-      setImage(result.assets[0].uri);
-      // 여기에 OCR 처리 로직 추가 예정
+      await handleImageProcessing(result.assets[0].uri);
     }
   };
 
@@ -96,21 +109,18 @@ export default function RegisterPrescription() {
     if (!camera) return;
 
     try {
-      setScanning(true);
       const photo = await camera.takePictureAsync({
         quality: 1,
-        skipProcessing: true // 처리 속도 향상
+        skipProcessing: true
       });
 
       if (photo) {
-        setImage(photo.uri);
+        await handleImageProcessing(photo.uri);
         setShowCamera(false);
       }
     } catch (error) {
       console.log("Capture error:", error);
       alert("사진 촬영에 실패했습니다.");
-    } finally {
-      setScanning(false);
     }
   };
 
@@ -121,16 +131,17 @@ export default function RegisterPrescription() {
       return;
     }
 
-    // 여기에 처방전 데이터 저장 로직 추가 예정
+    // OCR로 처리된 데이터라고 가정
     const prescriptionData = {
       childName: childName,
       imageUri: image,
-      date: new Date().toISOString().split("T")[0], // YYYY-MM-DD 형식
-      documentId: new Date().getTime().toString() // 임시 ID 생성
+      date: new Date().toISOString().split("T")[0],
+      pharmacyName: "행복약국", // OCR로 인식된 약국 이름
+      documentId: `${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}${String(new Date().getDate()).padStart(2, '0')}${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`
     };
 
-    // 데이터 저장 후 DocumentStorage 페이지로 이동
-    navigation.navigate("DocumentStorage", {
+    // DocumentStorage 페이지로 이동하면서 데이터 전달
+    navigation.replace("DocumentStorage", {
       newPrescription: prescriptionData
     });
   };

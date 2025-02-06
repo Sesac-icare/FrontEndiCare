@@ -121,17 +121,10 @@ export default function RegisterPrescription() {
       return;
     }
 
-    // 여기에 처방전 데이터 저장 로직 추가 예정
-    const prescriptionData = {
+    // 등록 성공 후 리스트 페이지로 이동
+    navigation.navigate("PharmacyList", {
       childName: childName,
-      imageUri: image,
-      date: new Date().toISOString().split("T")[0], // YYYY-MM-DD 형식
-      documentId: new Date().getTime().toString() // 임시 ID 생성
-    };
-
-    // 데이터 저장 후 DocumentStorage 페이지로 이동
-    navigation.navigate("DocumentStorage", {
-      newPrescription: prescriptionData
+      prescriptionImage: image
     });
   };
 
@@ -251,7 +244,6 @@ export default function RegisterPrescription() {
               <TouchableOpacity
                 style={styles.cameraButton}
                 onPress={handleRegister}
-                disabled={!childName.trim() || !image}
               >
                 <View style={styles.buttonContent}>
                   <Text style={[styles.buttonText, styles.buttonTextWithIcon]}>
@@ -485,7 +477,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#016A4C",
     padding: 16,
     borderRadius: 12,
-    opacity: (props) => (props.disabled ? 0.6 : 1),
     shadowColor: "#000",
     shadowOffset: {
       width: 0,

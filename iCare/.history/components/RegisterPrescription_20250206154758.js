@@ -121,16 +121,17 @@ export default function RegisterPrescription() {
       return;
     }
 
-    // 여기에 처방전 데이터 저장 로직 추가 예정
+    // 처방전 데이터 생성
     const prescriptionData = {
       childName: childName,
       imageUri: image,
-      date: new Date().toISOString().split("T")[0], // YYYY-MM-DD 형식
-      documentId: new Date().getTime().toString() // 임시 ID 생성
+      date: new Date().toISOString().split("T")[0],
+      pharmacyName: "행복약국", // 예시 데이터
+      documentId: `${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}${String(new Date().getDate()).padStart(2, '0')}${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`
     };
 
-    // 데이터 저장 후 DocumentStorage 페이지로 이동
-    navigation.navigate("DocumentStorage", {
+    // DocumentStorage 페이지로 이동하면서 데이터 전달
+    navigation.replace("DocumentStorage", {
       newPrescription: prescriptionData
     });
   };

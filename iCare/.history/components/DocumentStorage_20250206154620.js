@@ -14,11 +14,11 @@ import { useNavigation } from "@react-navigation/native";
 export default function DocumentStorage({ route }) {
   const navigation = useNavigation();
   const [prescriptions, setPrescriptions] = useState([]);
-
+  
   useEffect(() => {
     // route.params로 전달된 새 처방전이 있으면 목록에 추가
     if (route.params?.newPrescription) {
-      setPrescriptions((prev) => [route.params.newPrescription, ...prev]);
+      setPrescriptions(prev => [route.params.newPrescription, ...prev]);
     }
   }, [route.params?.newPrescription]);
 
@@ -42,9 +42,7 @@ export default function DocumentStorage({ route }) {
         <View style={styles.subHeader}>
           <View style={styles.titleContainer}>
             <Text style={styles.pageTitle}>서류보관함</Text>
-            <Text style={styles.documentCount}>
-              (총 {prescriptions.length}개)
-            </Text>
+            <Text style={styles.documentCount}>(총 {prescriptions.length}개)</Text>
           </View>
           <TouchableOpacity style={styles.filterButton}>
             <Text style={styles.filterText}>최신순</Text>
@@ -57,53 +55,20 @@ export default function DocumentStorage({ route }) {
         </View>
 
         <ScrollView style={styles.content}>
-          {prescriptions.length === 0 ? (
-            <View style={styles.emptyContainer}>
-              <View style={styles.iconContainer}>
-                <MaterialIcons name="description" size={80} color="#CCCCCC" />
+          {prescriptions.map((prescription) => (
+            <TouchableOpacity
+              key={prescription.documentId}
+              style={styles.prescriptionItem}
+              onPress={() => {/* 상세보기 처리 */}}
+            >
+              <View style={styles.itemHeader}>
+                <Text style={styles.childName}>{prescription.childName}</Text>
+                <MaterialIcons name="chevron-right" size={24} color="#CCCCCC" />
               </View>
-              <Text style={styles.emptyText}>
-                약국봉투를 등록하고{"\n"}
-                처방전을 관리해보세요
-              </Text>
-              <Text style={styles.subText}>채팅으로도 등록할 수 있습니다.</Text>
-              <TouchableOpacity
-                style={styles.addButton}
-                onPress={() => navigation.navigate("RegisterPrescription")}
-              >
-                <MaterialIcons
-                  name="medication"
-                  size={24}
-                  color="#fff"
-                  style={styles.buttonIcon}
-                />
-                <Text style={styles.addButtonText}>약국봉투 등록하기</Text>
-              </TouchableOpacity>
-            </View>
-          ) : (
-            prescriptions.map((prescription) => (
-              <TouchableOpacity
-                key={prescription.documentId}
-                style={styles.prescriptionItem}
-                onPress={() => {
-                  /* 상세보기 처리 */
-                }}
-              >
-                <View style={styles.itemHeader}>
-                  <Text style={styles.childName}>{prescription.childName}</Text>
-                  <MaterialIcons
-                    name="chevron-right"
-                    size={24}
-                    color="#CCCCCC"
-                  />
-                </View>
-                <Text style={styles.date}>{prescription.date}</Text>
-                <Text style={styles.documentId}>
-                  교부번호: {prescription.documentId}
-                </Text>
-              </TouchableOpacity>
-            ))
-          )}
+              <Text style={styles.date}>{prescription.date}</Text>
+              <Text style={styles.documentId}>교부번호: {prescription.documentId}</Text>
+            </TouchableOpacity>
+          ))}
         </ScrollView>
       </View>
     </SafeAreaView>
@@ -182,12 +147,12 @@ const styles = StyleSheet.create({
     color: "#666",
     marginRight: 4
   },
-  contentWrapper: {
-    flex: 1,
-    backgroundColor: "#f9fafb"
-  },
   content: {
-    padding: 20
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+    backgroundColor: "#f9fafb"
   },
   emptyContainer: {
     alignItems: "center",
@@ -250,8 +215,7 @@ const styles = StyleSheet.create({
     padding: 16,
     borderBottomWidth: 1,
     borderBottomColor: "#f0f0f0",
-    width: "100%",
-    backgroundColor: "#fff"
+    width: "100%"
   },
   itemHeader: {
     flexDirection: "row",

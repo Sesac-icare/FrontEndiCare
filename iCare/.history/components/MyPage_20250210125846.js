@@ -25,11 +25,21 @@ export default function MyPage() {
         </View>
 
         <View style={styles.content}>
-          <TouchableOpacity style={styles.buttonCard}>
+          <View style={styles.titleWrapper}>
+            <View style={styles.titleContainer}>
+              <Text style={styles.titleGreen}>마이</Text>
+              <Text style={styles.title}>페이지</Text>
+            </View>
+            <Text style={styles.subtitle}>
+              자녀 정보와 처방전을 관리할 수 있습니다.
+            </Text>
+          </View>
+
+          <TouchableOpacity style={styles.button}>
             <View style={styles.buttonContent}>
               <MaterialIcons
                 name="child-care"
-                size={48}
+                size={24}
                 color="#016A4C"
                 style={styles.buttonIcon}
               />
@@ -44,13 +54,13 @@ export default function MyPage() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.buttonCard}
+            style={styles.button}
             onPress={() => navigation.navigate("DocumentStorage")}
           >
             <View style={styles.buttonContent}>
               <MaterialIcons
                 name="medical-services"
-                size={48}
+                size={24}
                 color="#016A4C"
                 style={styles.buttonIcon}
               />
@@ -69,7 +79,6 @@ export default function MyPage() {
               <Text style={styles.menuText}>로그아웃</Text>
               <MaterialIcons name="chevron-right" size={24} color="#CCCCCC" />
             </TouchableOpacity>
-
             <TouchableOpacity style={styles.menuItem}>
               <Text style={styles.menuText}>회원탈퇴</Text>
               <MaterialIcons name="chevron-right" size={24} color="#CCCCCC" />
@@ -108,9 +117,33 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: "#fff"
   },
-  buttonCard: {
+  titleWrapper: {
+    marginTop: 20,
+    marginBottom: 40
+  },
+  titleContainer: {
+    flexDirection: "row",
+    marginBottom: 10,
+    flexWrap: "nowrap",
+    alignItems: "center"
+  },
+  titleGreen: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#016a4c"
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "black"
+  },
+  subtitle: {
+    fontSize: 16,
+    color: "#999999"
+  },
+  button: {
     backgroundColor: "#fff",
-    paddingVertical: 70,
+    paddingVertical: 80,
     width: "100%",
     borderRadius: 10,
     marginBottom: 30,
@@ -135,7 +168,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     fontSize: 18,
-    color: "#016A4C",
+    color: "#016a4c",
     fontWeight: "900",
     flex: 1,
     textAlign: "center",

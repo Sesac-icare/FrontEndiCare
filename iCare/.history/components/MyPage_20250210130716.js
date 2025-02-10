@@ -110,7 +110,7 @@ const styles = StyleSheet.create({
   },
   buttonCard: {
     backgroundColor: "#fff",
-    paddingVertical: 70,
+    paddingVertical: 40,
     width: "100%",
     borderRadius: 10,
     marginBottom: 30,
@@ -127,7 +127,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     width: "100%",
-    paddingHorizontal: 30
+    paddingHorizontal: 30,
+    gap: 16
   },
   buttonIcon: {
     transform: [{ scale: 2 }],

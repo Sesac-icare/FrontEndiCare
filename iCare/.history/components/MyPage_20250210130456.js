@@ -110,7 +110,7 @@ const styles = StyleSheet.create({
   },
   buttonCard: {
     backgroundColor: "#fff",
-    paddingVertical: 70,
+    paddingVertical: 80,
     width: "100%",
     borderRadius: 10,
     marginBottom: 30,
@@ -134,13 +134,19 @@ const styles = StyleSheet.create({
     marginLeft: 0
   },
   buttonText: {
-    fontSize: 18,
+    marginLeft: 12,
+    fontSize: 16,
     color: "#016A4C",
-    fontWeight: "900",
-    flex: 1,
-    textAlign: "center",
-    marginLeft: 0
-  },
+    fontWeight: "600"
+  }
+  // buttonText: {
+  //   fontSize: 18,
+  //   color: "#016A4C",
+  //   fontWeight: "900",
+  //   flex: 1,
+  //   textAlign: "center",
+  //   marginLeft: 0
+  // },
   arrowIcon: {
     transform: [{ scale: 2 }],
     marginLeft: "auto"

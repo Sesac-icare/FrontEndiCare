@@ -29,7 +29,7 @@ export default function MyPage() {
             <View style={styles.buttonContent}>
               <MaterialIcons
                 name="child-care"
-                size={48}
+                size={24}
                 color="#016A4C"
                 style={styles.buttonIcon}
               />
@@ -50,7 +50,7 @@ export default function MyPage() {
             <View style={styles.buttonContent}>
               <MaterialIcons
                 name="medical-services"
-                size={48}
+                size={24}
                 color="#016A4C"
                 style={styles.buttonIcon}
               />
@@ -110,7 +110,7 @@ const styles = StyleSheet.create({
   },
   buttonCard: {
     backgroundColor: "#fff",
-    paddingVertical: 70,
+    paddingVertical: 80,
     width: "100%",
     borderRadius: 10,
     marginBottom: 30,

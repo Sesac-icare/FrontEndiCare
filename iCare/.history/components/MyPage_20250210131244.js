@@ -106,22 +106,22 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     padding: 20,
-    backgroundColor: "#fff"
+    backgroundColor: "#f9fafb"
   },
   buttonCard: {
     backgroundColor: "#fff",
     paddingVertical: 70,
     width: "100%",
-    borderRadius: 10,
-    marginBottom: 30,
+    borderRadius: 16,
+    marginBottom: 16,
     elevation: 2,
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
-      height: 1
+      height: 2
     },
-    shadowOpacity: 0.2,
-    shadowRadius: 2
+    shadowOpacity: 0.08,
+    shadowRadius: 8
   },
   buttonContent: {
     flexDirection: "row",
@@ -136,7 +136,7 @@ const styles = StyleSheet.create({
   buttonText: {
     fontSize: 18,
     color: "#016A4C",
-    fontWeight: "900",
+    fontWeight: "700",
     flex: 1,
     textAlign: "center",
     marginLeft: 0
@@ -146,30 +146,31 @@ const styles = StyleSheet.create({
     marginLeft: "auto"
   },
   menuSection: {
-    marginTop: 20,
+    marginTop: 8,
     backgroundColor: "#fff",
-    borderRadius: 10,
+    borderRadius: 16,
     elevation: 2,
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
-      height: 1
+      height: 2
     },
-    shadowOpacity: 0.2,
-    shadowRadius: 2
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    overflow: "hidden"
   },
   menuItem: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingVertical: 20,
-    paddingHorizontal: 20,
+    paddingVertical: 18,
+    paddingHorizontal: 24,
     borderBottomWidth: 1,
     borderBottomColor: "#f0f0f0"
   },
   menuText: {
     fontSize: 16,
-    color: "#666666",
+    color: "#444",
     fontWeight: "500"
   }
 });

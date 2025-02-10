@@ -69,8 +69,7 @@ export default function MyPage() {
               <Text style={styles.menuText}>로그아웃</Text>
               <MaterialIcons name="chevron-right" size={24} color="#CCCCCC" />
             </TouchableOpacity>
-
-            <TouchableOpacity style={styles.menuItem}>
+            <TouchableOpacity style={[styles.menuItem, styles.lastMenuItem]}>
               <Text style={styles.menuText}>회원탈퇴</Text>
               <MaterialIcons name="chevron-right" size={24} color="#CCCCCC" />
             </TouchableOpacity>
@@ -120,8 +119,8 @@ const styles = StyleSheet.create({
       width: 0,
       height: 1
     },
-    shadowOpacity: 0.2,
-    shadowRadius: 2
+    shadowOpacity: 0.08,
+    shadowRadius: 8
   },
   buttonContent: {
     flexDirection: "row",
@@ -149,14 +148,15 @@ const styles = StyleSheet.create({
     marginTop: 20,
     backgroundColor: "#fff",
     borderRadius: 10,
+    overflow: "hidden",
     elevation: 2,
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
-      height: 1
+      height: 2
     },
-    shadowOpacity: 0.2,
-    shadowRadius: 2
+    shadowOpacity: 0.08,
+    shadowRadius: 8
   },
   menuItem: {
     flexDirection: "row",
@@ -165,7 +165,11 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
     paddingHorizontal: 20,
     borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0"
+    borderBottomColor: "#f0f0f0",
+    backgroundColor: "#fff"
+  },
+  lastMenuItem: {
+    borderBottomWidth: 0
   },
   menuText: {
     fontSize: 16,

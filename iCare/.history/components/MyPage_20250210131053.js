@@ -110,7 +110,7 @@ const styles = StyleSheet.create({
   },
   buttonCard: {
     backgroundColor: "#fff",
-    paddingVertical: 70,
+    paddingVertical: 60,
     width: "100%",
     borderRadius: 10,
     marginBottom: 30,

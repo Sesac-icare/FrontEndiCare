@@ -12,7 +12,7 @@ import {
 import { MaterialIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import * as ImagePicker from "expo-image-picker";
-import { Camera as ExpoCamera } from "expo-camera";
+import { Camera } from 'expo-camera';
 
 export default function RegisterPrescription() {
   const navigation = useNavigation();
@@ -27,11 +27,11 @@ export default function RegisterPrescription() {
   // 카메라 권한 요청
   const requestCameraPermission = async () => {
     try {
-      const { status } = await ExpoCamera.requestCameraPermissionsAsync();
-      setCameraPermission(status === "granted");
-      return status === "granted";
+      const { status } = await Camera.requestCameraPermissionsAsync();
+      setCameraPermission(status === 'granted');
+      return status === 'granted';
     } catch (error) {
-      console.log("Camera permission error:", error);
+      console.log('Camera permission error:', error);
       return false;
     }
   };
@@ -39,10 +39,9 @@ export default function RegisterPrescription() {
   // 이미지 선택
   const pickImage = async () => {
     try {
-      const { status } =
-        await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (status !== "granted") {
-        alert("갤러리 접근 권한이 필요합니다.");
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        alert('갤러리 접근 권한이 필요합니다.');
         return;
       }
 
@@ -50,15 +49,15 @@ export default function RegisterPrescription() {
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
         aspect: [4, 3],
-        quality: 1
+        quality: 1,
       });
 
       if (!result.canceled) {
         setImage(result.assets[0].uri);
       }
     } catch (error) {
-      console.log("Image picker error:", error);
-      alert("이미지를 선택하는 중 오류가 발생했습니다.");
+      console.log('Image picker error:', error);
+      alert('이미지를 선택하는 중 오류가 발생했습니다.');
     }
   };
 
@@ -68,7 +67,7 @@ export default function RegisterPrescription() {
     if (hasPermission) {
       setShowCamera(true);
     } else {
-      alert("카메라 권한이 필요합니다.");
+      alert('카메라 권한이 필요합니다.');
     }
   };
 
@@ -79,7 +78,7 @@ export default function RegisterPrescription() {
     try {
       setScanning(true);
       const photo = await camera.takePictureAsync({
-        quality: 1
+        quality: 1,
       });
 
       if (photo) {
@@ -87,8 +86,8 @@ export default function RegisterPrescription() {
         setShowCamera(false);
       }
     } catch (error) {
-      console.log("Capture error:", error);
-      alert("사진 촬영에 실패했습니다.");
+      console.log('Capture error:', error);
+      alert('사진 촬영에 실패했습니다.');
     } finally {
       setScanning(false);
     }
@@ -99,11 +98,6 @@ export default function RegisterPrescription() {
     if (!childName.trim()) {
       setNameError(true);
       alert("자녀 이름을 입력해주세요.");
-      return;
-    }
-
-    if (!image) {
-      alert("이미지를 선택해주세요.");
       return;
     }
 
@@ -122,10 +116,10 @@ export default function RegisterPrescription() {
 
   if (showCamera) {
     return (
-      <ExpoCamera 
+      <Camera
         style={styles.camera}
-        type={ExpoCamera.Constants.Type.back}
         ref={ref => setCamera(ref)}
+        ratio="4:3"
       >
         <SafeAreaView style={styles.cameraContainer}>
           <View style={styles.cameraHeader}>
@@ -160,7 +154,7 @@ export default function RegisterPrescription() {
             )}
           </View>
         </SafeAreaView>
-      </ExpoCamera>
+      </Camera>
     );
   }
 

@@ -12,7 +12,7 @@ import {
 import { MaterialIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import * as ImagePicker from "expo-image-picker";
-import { Camera as ExpoCamera } from "expo-camera";
+import * as Camera from "expo-camera";
 
 export default function RegisterPrescription() {
   const navigation = useNavigation();
@@ -24,62 +24,82 @@ export default function RegisterPrescription() {
   const [camera, setCamera] = useState(null);
   const [nameError, setNameError] = useState(false);
 
-  // 카메라 권한 요청
-  const requestCameraPermission = async () => {
+  useEffect(() => {
+    (async () => {
+      if (Platform.OS !== "web") {
+        const { status } = await Camera.requestCameraPermissionsAsync();
+        setCameraPermission(status === "granted");
+      }
+    })();
+  }, []);
+
+  const getPermission = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      alert("카메라 접근 권한이 필요합니다.");
+      return false;
+    }
+    return true;
+  };
+
+  const pickImage = async () => {
+    const hasPermission = await getPermission();
+    if (!hasPermission) return;
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1
+    });
+
+    if (!result.canceled) {
+      setImage(result.assets[0].uri);
+      // 여기에 OCR 처리 로직 추가 예정
+    }
+  };
+
+  const getCameraPermission = async () => {
+    if (Platform.OS === "web") {
+      alert("웹에서는 카메라를 사용할 수 없습니다.");
+      return false;
+    }
+
     try {
-      const { status } = await ExpoCamera.requestCameraPermissionsAsync();
-      setCameraPermission(status === "granted");
-      return status === "granted";
+      if (!cameraPermission) {
+        const { status } = await Camera.requestCameraPermissionsAsync();
+        if (status !== "granted") {
+          alert(
+            "카메라를 사용하기 위해서는 권한이 필요합니다.\n설정에서 카메라 권한을 허용해주세요."
+          );
+          return false;
+        }
+        setCameraPermission(true);
+      }
+      return true;
     } catch (error) {
       console.log("Camera permission error:", error);
+      alert("카메라 권한을 확인하는 중 오류가 발생했습니다.");
       return false;
     }
   };
 
-  // 이미지 선택
-  const pickImage = async () => {
-    try {
-      const { status } =
-        await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (status !== "granted") {
-        alert("갤러리 접근 권한이 필요합니다.");
-        return;
-      }
-
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [4, 3],
-        quality: 1
-      });
-
-      if (!result.canceled) {
-        setImage(result.assets[0].uri);
-      }
-    } catch (error) {
-      console.log("Image picker error:", error);
-      alert("이미지를 선택하는 중 오류가 발생했습니다.");
-    }
-  };
-
-  // 카메라 실행
   const takePicture = async () => {
-    const hasPermission = await requestCameraPermission();
-    if (hasPermission) {
-      setShowCamera(true);
-    } else {
-      alert("카메라 권한이 필요합니다.");
+    if (!cameraPermission) {
+      const hasPermission = await getCameraPermission();
+      if (!hasPermission) return;
     }
+    setShowCamera(true);
   };
 
-  // 사진 촬영
   const handleCapture = async () => {
     if (!camera) return;
 
     try {
       setScanning(true);
       const photo = await camera.takePictureAsync({
-        quality: 1
+        quality: 1,
+        skipProcessing: true // 처리 속도 향상
       });
 
       if (photo) {
@@ -94,16 +114,10 @@ export default function RegisterPrescription() {
     }
   };
 
-  // 등록하기
   const handleRegister = () => {
     if (!childName.trim()) {
       setNameError(true);
       alert("자녀 이름을 입력해주세요.");
-      return;
-    }
-
-    if (!image) {
-      alert("이미지를 선택해주세요.");
       return;
     }
 
@@ -112,7 +126,7 @@ export default function RegisterPrescription() {
       imageUri: image,
       date: "2024.02.15",
       pharmacyName: "행복약국",
-      documentId: `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+      documentId: `${Date.now()}_${Math.random().toString(36).substr(2, 9)}` // 고유한 ID 생성
     };
 
     navigation.navigate("DocumentStorage", {
@@ -122,10 +136,12 @@ export default function RegisterPrescription() {
 
   if (showCamera) {
     return (
-      <ExpoCamera 
+      <Camera
         style={styles.camera}
-        type={ExpoCamera.Constants.Type.back}
-        ref={ref => setCamera(ref)}
+        type={Camera.Constants.Type.back}
+        ref={(ref) => setCamera(ref)}
+        ratio="4:3"
+        autoFocus={Camera.Constants.AutoFocus.on}
       >
         <SafeAreaView style={styles.cameraContainer}>
           <View style={styles.cameraHeader}>
@@ -160,7 +176,7 @@ export default function RegisterPrescription() {
             )}
           </View>
         </SafeAreaView>
-      </ExpoCamera>
+      </Camera>
     );
   }
 

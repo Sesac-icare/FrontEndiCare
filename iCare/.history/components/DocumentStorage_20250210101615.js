@@ -23,10 +23,17 @@ export default function DocumentStorage({ route }) {
 
   useEffect(() => {
     if (route.params?.newPrescription) {
+      const newPrescriptionWithId = {
+        ...route.params.newPrescription,
+        documentId: `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+      };
+
       setPrescriptions(prevPrescriptions => [
-        route.params.newPrescription,
+        newPrescriptionWithId,
         ...prevPrescriptions
       ]);
+
+      navigation.setParams({ newPrescription: null });
     }
   }, [route.params?.newPrescription]);
 

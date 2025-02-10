@@ -14,11 +14,21 @@ import Login from "./components/auth/Login";
 import SignUp from "./components/auth/SignUp";
 import DocumentStorage from "./components/DocumentStorage";
 import RegisterPrescription from "./components/RegisterPrescription";
-import { Camera as ExpoCamera } from "expo-camera";
-import ChatScreen from "./components/ChatScreen";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
+
+// 임시 채팅, 마이페이지 컴포넌트
+const ChatScreen = () => (
+  <SafeAreaView style={styles.safe}>
+    <View style={styles.container}>
+      <Header />
+      <View style={styles.center}>
+        <Text>채팅 화면</Text>
+      </View>
+    </View>
+  </SafeAreaView>
+);
 
 const HomeScreen = () => {
   return (
@@ -39,10 +49,7 @@ function MyPageStackScreen() {
     <MyPageStack.Navigator screenOptions={{ headerShown: false }}>
       <MyPageStack.Screen name="MyPageMain" component={MyPage} />
       <MyPageStack.Screen name="DocumentStorage" component={DocumentStorage} />
-      <MyPageStack.Screen
-        name="RegisterPrescription"
-        component={RegisterPrescription}
-      />
+      <MyPageStack.Screen name="RegisterPrescription" component={RegisterPrescription} />
     </MyPageStack.Navigator>
   );
 }
@@ -85,7 +92,7 @@ function TabNavigator() {
       />
       <Tab.Screen
         name="채팅"
-        component={ChatScreen}
+        component={ChatScreen}=
         options={{
           tabBarIcon: ({ color }) => (
             <MaterialIcons name="forum" size={28} color={color} />
@@ -129,10 +136,7 @@ const App = () => {
         <Stack.Screen name="MainTabs" component={TabNavigator} />
         <Stack.Screen name="HospitalList" component={HospitalList} />
         <Stack.Screen name="PharmacyList" component={PharmacyList} />
-        <Stack.Screen
-          name="RegisterPrescription"
-          component={RegisterPrescription}
-        />
+        <Stack.Screen name="RegisterPrescription" component={RegisterPrescription} />
       </Stack.Navigator>
     </NavigationContainer>
   );
@@ -163,13 +167,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: "green",
     fontFamily: "NotoSansKR"
-  },
-  camera: {
-    flex: 1,
-    width: "100%",
-    height: "100%",
-    justifyContent: "flex-end",
-    alignItems: "center"
   }
 });
 

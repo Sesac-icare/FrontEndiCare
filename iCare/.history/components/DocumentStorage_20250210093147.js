@@ -23,10 +23,18 @@ export default function DocumentStorage({ route }) {
 
   useEffect(() => {
     if (route.params?.newPrescription) {
+      const newPrescriptionWithId = {
+        ...route.params.newPrescription,
+        documentId: `${Date.now()}_${Math.random().toString(36).substr(2, 9)}` // 고유한 ID 생성
+      };
+
       setPrescriptions(prevPrescriptions => [
-        route.params.newPrescription,
+        newPrescriptionWithId,
         ...prevPrescriptions
       ]);
+
+      // 파라미터 초기화
+      navigation.setParams({ newPrescription: null });
     }
   }, [route.params?.newPrescription]);
 
@@ -36,8 +44,8 @@ export default function DocumentStorage({ route }) {
   };
 
   const confirmDelete = () => {
-    setPrescriptions(prevPrescriptions =>
-      prevPrescriptions.filter(p => p.documentId !== selectedPrescription.documentId)
+    setPrescriptions((prevPrescriptions) =>
+      prevPrescriptions.filter((p) => p.id !== selectedPrescription.id)
     );
     setShowDeleteModal(false);
     setSelectedPrescription(null);

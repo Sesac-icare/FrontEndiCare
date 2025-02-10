@@ -12,7 +12,7 @@ import {
 import { MaterialIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import * as ImagePicker from "expo-image-picker";
-import { Camera as ExpoCamera } from "expo-camera";
+import { Camera } from "expo-camera";
 
 export default function RegisterPrescription() {
   const navigation = useNavigation();
@@ -27,7 +27,7 @@ export default function RegisterPrescription() {
   // 카메라 권한 요청
   const requestCameraPermission = async () => {
     try {
-      const { status } = await ExpoCamera.requestCameraPermissionsAsync();
+      const { status } = await Camera.requestCameraPermissionsAsync();
       setCameraPermission(status === "granted");
       return status === "granted";
     } catch (error) {
@@ -102,11 +102,6 @@ export default function RegisterPrescription() {
       return;
     }
 
-    if (!image) {
-      alert("이미지를 선택해주세요.");
-      return;
-    }
-
     const prescriptionData = {
       childName: childName,
       imageUri: image,
@@ -122,11 +117,7 @@ export default function RegisterPrescription() {
 
   if (showCamera) {
     return (
-      <ExpoCamera 
-        style={styles.camera}
-        type={ExpoCamera.Constants.Type.back}
-        ref={ref => setCamera(ref)}
-      >
+      <Camera style={styles.camera} ref={(ref) => setCamera(ref)} ratio="4:3">
         <SafeAreaView style={styles.cameraContainer}>
           <View style={styles.cameraHeader}>
             <TouchableOpacity
@@ -160,7 +151,7 @@ export default function RegisterPrescription() {
             )}
           </View>
         </SafeAreaView>
-      </ExpoCamera>
+      </Camera>
     );
   }
 

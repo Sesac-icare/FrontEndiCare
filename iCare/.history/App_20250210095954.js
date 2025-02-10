@@ -14,11 +14,22 @@ import Login from "./components/auth/Login";
 import SignUp from "./components/auth/SignUp";
 import DocumentStorage from "./components/DocumentStorage";
 import RegisterPrescription from "./components/RegisterPrescription";
-import { Camera as ExpoCamera } from "expo-camera";
-import ChatScreen from "./components/ChatScreen";
+import { Camera as ExpoCamera } from 'expo-camera';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
+
+// 임시 채팅, 마이페이지 컴포넌트
+const ChatScreen = () => (
+  <SafeAreaView style={styles.safe}>
+    <View style={styles.container}>
+      <Header />
+      <View style={styles.center}>
+        <Text>채팅 화면</Text>
+      </View>
+    </View>
+  </SafeAreaView>
+);
 
 const HomeScreen = () => {
   return (

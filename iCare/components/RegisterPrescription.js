@@ -111,7 +111,7 @@ export default function RegisterPrescription() {
     const prescriptionData = {
       childName: childName,
       imageUri: image,
-      date: new Date().toISOString().split('T')[0].replace(/-/g, '.'),
+      date: new Date().toISOString().split("T")[0].replace(/-/g, "."),
       pharmacyName: "행복약국",
       documentId: `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
     };
@@ -124,10 +124,10 @@ export default function RegisterPrescription() {
 
   if (showCamera) {
     return (
-      <ExpoCamera 
+      <ExpoCamera
         style={styles.camera}
         type={ExpoCamera.Constants.Type.back}
-        ref={ref => setCamera(ref)}
+        ref={(ref) => setCamera(ref)}
       >
         <SafeAreaView style={styles.cameraContainer}>
           <View style={styles.cameraHeader}>

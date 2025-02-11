@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
+import axios from "axios";
 
 export default function SignUp() {
   const navigation = useNavigation();
@@ -35,6 +36,11 @@ export default function SignUp() {
       return;
     }
 
+    if (!termAgreed) {
+      alert("고유식별정보 수집 및 이용에 동의해주세요.");
+      return;
+    }
+
     const signUpData = {
       username,
       email,
@@ -43,17 +49,12 @@ export default function SignUp() {
       term_agreed: termAgreed
     };
 
-    fetch("api/users/register", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(signUpData)
-    })
-      .then((response) => response.json())
-      .then((data) => {
+    axios
+      .post("http://172.16.217.175:8000/users/register/", signUpData)
+      .then((response) => {
+        const data = response.data;
         if (data.email) {
-          setShowModal(true);
+          navigation.navigate("MainTabs");
         }
       })
       .catch((error) => {
@@ -66,6 +67,49 @@ export default function SignUp() {
         }
       });
   };
+
+  // const handleSignUp = () => {
+  //   if (!username || !email || !password || !passwordCheck) {
+  //     alert("모든 필드를 입력해주세요.");
+  //     return;
+  //   }
+
+  //   if (passwordMismatch) {
+  //     alert("비밀번호가 일치하지 않습니다.");
+  //     return;
+  //   }
+
+  //   const signUpData = {
+  //     username,
+  //     email,
+  //     password,
+  //     passwordCheck,
+  //     term_agreed: termAgreed
+  //   };
+
+  //   fetch("api/users/register", {
+  //     method: "POST",
+  //     headers: {
+  //       "Content-Type": "application/json"
+  //     },
+  //     body: JSON.stringify(signUpData)
+  //   })
+  //     .then((response) => response.json())
+  //     .then((data) => {
+  //       if (data.email) {
+  //         setShowModal(true);
+  //       }
+  //     })
+  //     .catch((error) => {
+  //       if (error.response?.status === 400) {
+  //         if (error.response.data.email) {
+  //           alert("이미 사용 중인 이메일입니다.");
+  //         } else if (error.response.data.password) {
+  //           alert("비밀번호가 일치하지 않습니다.");
+  //         }
+  //       }
+  //     });
+  // };
 
   const handleAgree = () => {
     setTermAgreed(true);
@@ -169,6 +213,24 @@ export default function SignUp() {
                 비밀번호가 일치하지 않습니다.
               </Text>
             )}
+          </View>
+
+          <View style={styles.inputSection}>
+            <View style={styles.checkboxContainer}>
+              <TouchableOpacity
+                style={styles.checkbox}
+                onPress={() => setTermAgreed(!termAgreed)}
+              >
+                <MaterialIcons
+                  name={termAgreed ? "check-box" : "check-box-outline-blank"}
+                  size={24}
+                  color="#016A4C"
+                />
+              </TouchableOpacity>
+              <Text style={styles.checkboxLabel}>
+                고유식별정보 수집 및 이용에 동의합니다
+              </Text>
+            </View>
           </View>
 
           <TouchableOpacity style={styles.signUpButton} onPress={handleSignUp}>
@@ -354,5 +416,18 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 4,
     marginLeft: 4
-  }
+  },
+  checkboxContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 10,
+    marginBottom: 20,
+  },
+  checkbox: {
+    marginRight: 8,
+  },
+  checkboxLabel: {
+    fontSize: 14,
+    color: '#666',
+  },
 });

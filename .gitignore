@@ -10,4 +10,5 @@ npm-debug.*
 *.orig.*
 web-build/
 .DS_Store
-.history/ 
+.history/
+.env 

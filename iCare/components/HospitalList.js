@@ -120,7 +120,7 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    backgroundColor: "#fff"
+    backgroundColor: "#f9fafb"
   },
   header: {
     flexDirection: "row",
@@ -172,26 +172,27 @@ const styles = StyleSheet.create({
   },
   listContainer: {
     flex: 1,
-    padding: 16
+    padding: 16,
+    backgroundColor: "#f9fafb"
   },
   hospitalItem: {
-    marginBottom: 20,
+    marginBottom: 16,
     padding: 16,
     backgroundColor: "#fff",
-    borderRadius: 10,
-    elevation: 2,
+    borderRadius: 12,
+    elevation: 1,
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 1
     },
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.1,
     shadowRadius: 2
   },
   typeLabel: {
     backgroundColor: "#E8FEEE",
     paddingVertical: 4,
-    paddingHorizontal: 10,
+    paddingHorizontal: 12,
     borderRadius: 20,
     alignSelf: "flex-start",
     marginBottom: 8

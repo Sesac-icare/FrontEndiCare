@@ -59,11 +59,7 @@ export default function PharmacyList() {
 
         <View style={styles.subHeader}>
           <View style={styles.titleContainer}>
-            <MaterialIcons 
-              name="location-on"
-              size={24}
-              color="#016A4C"
-            />
+            <MaterialIcons name="location-on" size={24} color="#016A4C" />
             <Text style={styles.pageTitle}>약국찾기</Text>
           </View>
           <TouchableOpacity style={styles.filterButton}>
@@ -81,7 +77,13 @@ export default function PharmacyList() {
             <TouchableOpacity key={index} style={styles.pharmacyItem}>
               <Text style={styles.pharmacyName}>{pharmacy.name}</Text>
               <Text style={styles.statusText}>
-                <Text style={pharmacy.status === "영업 중" ? styles.openStatus : styles.closedStatus}>
+                <Text
+                  style={
+                    pharmacy.status === "영업 중"
+                      ? styles.openStatus
+                      : styles.closedStatus
+                  }
+                >
                   {pharmacy.status}
                 </Text>
                 <Text style={styles.statusDivider}> | </Text>
@@ -112,7 +114,7 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    backgroundColor: "#fff"
+    backgroundColor: "#f9fafb"
   },
   header: {
     flexDirection: "row",
@@ -144,8 +146,8 @@ const styles = StyleSheet.create({
     borderBottomColor: "#f0f0f0"
   },
   titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8
   },
   pageTitle: {
@@ -164,20 +166,21 @@ const styles = StyleSheet.create({
   },
   listContainer: {
     flex: 1,
-    padding: 20
+    padding: 16,
+    backgroundColor: "#f9fafb"
   },
   pharmacyItem: {
-    marginBottom: 20,
-    padding: 18,
+    marginBottom: 16,
+    padding: 16,
     backgroundColor: "#fff",
-    borderRadius: 10,
-    elevation: 2,
+    borderRadius: 12,
+    elevation: 1,
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 1
     },
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.1,
     shadowRadius: 2
   },
   pharmacyName: {
@@ -188,7 +191,8 @@ const styles = StyleSheet.create({
   statusText: {
     color: "#666",
     fontSize: 14,
-    marginBottom: 14
+    marginBottom: 12,
+    lineHeight: 20
   },
   addressContainer: {
     flexDirection: "row",
@@ -211,13 +215,13 @@ const styles = StyleSheet.create({
   },
   openStatus: {
     color: "#016A4C",
-    fontWeight: "700",
+    fontWeight: "700"
   },
   closedStatus: {
     color: "#E53935",
-    fontWeight: "700",
+    fontWeight: "700"
   },
   statusDivider: {
-    color: "#CCCCCC",
-  },
-}); 
+    color: "#CCCCCC"
+  }
+});

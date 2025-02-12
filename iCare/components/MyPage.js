@@ -110,16 +110,17 @@ export default function MyPage() {
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: "#fff"
+    backgroundColor: "#f9fafb"
   },
   container: {
     flex: 1,
-    backgroundColor: "#fff"
+    backgroundColor: "#f9fafb"
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
     padding: 20,
+    backgroundColor: "#fff",
     borderBottomWidth: 1,
     borderBottomColor: "#f0f0f0"
   },
@@ -132,7 +133,7 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     padding: 20,
-    backgroundColor: "#fff"
+    backgroundColor: "#f9fafb"
   },
   buttonCard: {
     backgroundColor: "#fff",

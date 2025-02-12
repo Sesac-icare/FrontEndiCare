@@ -145,7 +145,7 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    backgroundColor: "#ffffff"
+    backgroundColor: "#f9fafb"
   },
   center: {
     flex: 1,

@@ -74,7 +74,7 @@ export default function Contents() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: "#f9fafb",
     padding: 20
   },
   titleWrapper: {

@@ -19,19 +19,7 @@ export default function ChatScreen() {
   const [messages, setMessages] = useState([
     {
       type: "bot",
-      text: "아이의 증상을 입력해주세요."
-    },
-    {
-      type: "user",
-      text: "아이가 열이 나고 아파요. 현재 열려 있는 병원을 알려주세요."
-    },
-    {
-      type: "bot",
-      text: "아이의 증상이 열과 아픔으로 확인되었습니다. 지금 바로 근처에 열려 있는 병원을 찾아드릴게요."
-    },
-    {
-      type: "bot",
-      text: "위치 정보 확인 완료! 근처 병원을 검색 중입니다..."
+      text: "안녕하세요! 저는 아이케어봇이에요. 😊\n아이의 건강과 관련된 정보를 도와드릴게요."
     }
   ]);
   const scrollViewRef = useRef();
@@ -54,6 +42,10 @@ export default function ChatScreen() {
         text: "병원을 찾아드릴게요. 찾으시려는 지역의 주소를 입력해주세요.\n(예: 서울시 도봉구 창동)"
       }
     ]);
+  };
+
+  const handlePrescriptionUpload = () => {
+    // Implementation for prescription upload
   };
 
   const handleSend = async () => {
@@ -154,7 +146,10 @@ export default function ChatScreen() {
             >
               <Text style={styles.buttonText}>병원 찾기 🏥</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={[styles.whiteButton, styles.wideButton]}>
+            <TouchableOpacity
+              style={[styles.whiteButton, styles.wideButton]}
+              onPress={handlePrescriptionUpload}
+            >
               <Text style={styles.buttonText}>약 봉투 등록 ➕</Text>
             </TouchableOpacity>
           </View>
@@ -193,9 +188,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#fff"
   },
-  container: {
-    flex: 1
-  },
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -209,52 +201,51 @@ const styles = StyleSheet.create({
     marginLeft: "auto",
     marginRight: "auto"
   },
-  titleContainer: {
-    padding: 16,
-    backgroundColor: "#f9fafb"
-  },
-  title: {
-    fontSize: 20,
-    color: "#222",
-    fontWeight: "600"
-  },
   chatContainer: {
     flex: 1,
     padding: 16,
-    backgroundColor: "#f9fafb"
+    backgroundColor: "#fff"
   },
   grayBox: {
-    backgroundColor: "#fff",
-    padding: 16,
-    borderRadius: 12,
-    maxWidth: "85%",
-    marginBottom: 24,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2
+    backgroundColor: "#F5F5F5",
+    padding: 14,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    maxWidth: "auto",
+    alignSelf: "flex-start",
+    marginBottom: 16,
+    marginLeft: 4,
+    marginRight: 48
   },
   greenBox: {
-    backgroundColor: "#12b67a",
-    padding: 16,
-    borderRadius: 12,
-    maxWidth: "85%",
+    backgroundColor: "#00B386",
+    padding: 12,
+    paddingHorizontal: 14,
+    borderRadius: 20,
+    maxWidth: "65%",
     alignSelf: "flex-end",
-    marginBottom: 24
+    marginBottom: 12,
+    marginRight: 8,
+    marginLeft: 48
   },
   messageText: {
-    fontSize: 16,
+    fontSize: 15,
     color: "#222",
-    lineHeight: 24
+    lineHeight: 22,
+    flexShrink: 1
   },
   whiteText: {
-    fontSize: 16,
+    fontSize: 14,
     color: "#fff",
-    lineHeight: 24
+    lineHeight: 20,
+    flexShrink: 1
+  },
+  botName: {
+    fontSize: 13,
+    color: "#666",
+    marginBottom: 4,
+    marginLeft: 8,
+    fontWeight: "500"
   },
   buttonGroup: {
     flexDirection: "row",
@@ -265,28 +256,28 @@ const styles = StyleSheet.create({
   },
   whiteButton: {
     backgroundColor: "#fff",
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 20,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 25,
+    elevation: 2,
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 1
     },
-    shadowOpacity: 0.08,
-    shadowRadius: 2,
-    elevation: 1
+    shadowOpacity: 0.1,
+    shadowRadius: 2
   },
   buttonText: {
     fontSize: 14,
-    color: "#12b67a",
+    color: "#016A4C",
     textAlign: "center",
     fontWeight: "600"
   },
   wideButton: {
     marginTop: 4,
     width: "auto",
-    alignSelf: "stretch"
+    alignSelf: "flex-start"
   },
   inputOuterContainer: {
     backgroundColor: "#fff",
@@ -334,12 +325,5 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginLeft: 4
-  },
-  botName: {
-    fontSize: 14,
-    color: "#666666",
-    marginBottom: 8,
-    marginLeft: 4,
-    fontWeight: "500"
   }
 });

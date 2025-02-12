@@ -73,7 +73,6 @@ export default function SignUp() {
   const handleAgree = () => {
     setTermAgreed(true);
     setShowModal(false);
-    navigation.navigate("MainTabs");
   };
 
   // 비밀번호 확인 입력 시 일치 여부 체크

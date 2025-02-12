@@ -5,13 +5,39 @@ import {
   StyleSheet,
   TouchableOpacity,
   SafeAreaView,
-  Image
+  Image,
+  Alert
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 
 export default function MyPage() {
   const navigation = useNavigation();
+
+  const handleLogout = () => {
+    Alert.alert(
+      "로그아웃",
+      "로그아웃 하시겠습니까?",
+      [
+        {
+          text: "취소",
+          style: "cancel"
+        },
+        {
+          text: "로그아웃",
+          onPress: () => {
+            // TODO: 토큰 제거 로직 추가 (AsyncStorage 사용 시)
+            navigation.reset({
+              index: 0,
+              routes: [{ name: "Login" }]
+            });
+          },
+          style: "destructive"
+        }
+      ],
+      { cancelable: false }
+    );
+  };
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -65,7 +91,7 @@ export default function MyPage() {
           </TouchableOpacity>
 
           <View style={styles.menuSection}>
-            <TouchableOpacity style={styles.menuItem}>
+            <TouchableOpacity style={styles.menuItem} onPress={handleLogout}>
               <Text style={styles.menuText}>로그아웃</Text>
               <MaterialIcons name="chevron-right" size={24} color="#CCCCCC" />
             </TouchableOpacity>
@@ -170,6 +196,20 @@ const styles = StyleSheet.create({
   menuText: {
     fontSize: 16,
     color: "#666666",
+    fontWeight: "500"
+  },
+  logoutButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 16,
+    borderTopWidth: 1,
+    borderTopColor: "#f0f0f0",
+    marginTop: "auto"
+  },
+  logoutText: {
+    marginLeft: 8,
+    fontSize: 16,
+    color: "#E53935",
     fontWeight: "500"
   }
 });

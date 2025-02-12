@@ -43,7 +43,6 @@ export default function Login() {
       if (response.data.token) {
         const { token, user } = response.data;
         // TODO: 토큰을 안전하게 저장하는 로직 추가 (예: AsyncStorage)
-
         navigation.navigate("MainTabs");
       }
     } catch (error) {
@@ -51,6 +50,18 @@ export default function Login() {
 
       if (error.response) {
         // 서버가 응답한 구체적인 에러 메시지가 있는 경우
+        if (error.response.data.error) {
+          // "User with this email does not exist" 에러 처리
+          if (
+            error.response.data.error.includes(
+              "User with this email does not exist"
+            )
+          ) {
+            alert("등록되지 않은 이메일입니다.\n회원가입을 먼저 진행해주세요.");
+            return;
+          }
+        }
+
         if (error.response.data.email) {
           alert(error.response.data.email[0]);
         } else if (error.response.data.password) {

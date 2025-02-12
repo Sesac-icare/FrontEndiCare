@@ -13,6 +13,7 @@ import {
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
+import axios from "axios";
 
 export default function Login() {
   const navigation = useNavigation();
@@ -22,35 +23,53 @@ export default function Login() {
   // 버튼 활성화 여부를 확인하는 함수
   const isLoginButtonEnabled = email.trim() !== "" && password.trim() !== "";
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (!isLoginButtonEnabled) return;
 
-    // 테스트를 위해 API 호출 없이 바로 메인 화면으로 이동
-    navigation.navigate("MainTabs");
+    try {
+      const response = await axios.post(
+        "http://172.16.217.175:8000/users/login/",
+        {
+          email,
+          password
+        },
+        {
+          headers: {
+            "Content-Type": "application/json"
+          }
+        }
+      );
 
-    /* 실제 API 연동 코드는 주석 처리
-    fetch('api/users/login', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        email,
-        password
-      })
-    })
-    .then(response => response.json())
-    .then(data => {
-      if (data.token) {
+      if (response.data.token) {
+        const { token, user } = response.data;
+        // TODO: 토큰을 안전하게 저장하는 로직 추가 (예: AsyncStorage)
+
         navigation.navigate("MainTabs");
       }
-    })
-    .catch(error => {
-      if (error.response?.status === 400) {
-        alert("이메일 또는 비밀번호가 올바르지 않습니다.");
+    } catch (error) {
+      console.error("Login error:", error.response?.data);
+
+      if (error.response) {
+        // 서버가 응답한 구체적인 에러 메시지가 있는 경우
+        if (error.response.data.email) {
+          alert(error.response.data.email[0]);
+        } else if (error.response.data.password) {
+          alert(error.response.data.password[0]);
+        } else if (error.response.data.non_field_errors) {
+          alert(error.response.data.non_field_errors[0]);
+        } else if (error.response.status === 400) {
+          alert("이메일 또는 비밀번호가 올바르지 않습니다.");
+        } else {
+          alert("로그인에 실패했습니다. 다시 시도해주세요.");
+        }
+      } else if (error.request) {
+        // 요청은 보냈지만 응답을 받지 못한 경우
+        alert("서버와 통신할 수 없습니다. 인터넷 연결을 확인해주세요.");
+      } else {
+        // 요청 설정 중 에러가 발생한 경우
+        alert("로그인 중 오류가 발생했습니다.");
       }
-    });
-    */
+    }
   };
 
   return (

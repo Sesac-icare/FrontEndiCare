@@ -12,6 +12,7 @@ import {
   Image
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
+import axios from "axios";
 
 export default function ChatScreen() {
   const [message, setMessage] = useState("");
@@ -53,6 +54,42 @@ export default function ChatScreen() {
         text: "병원을 찾아드릴게요. 찾으시려는 지역의 주소를 입력해주세요.\n(예: 서울시 도봉구 창동)"
       }
     ]);
+  };
+
+  const handleSend = async () => {
+    if (!message.trim()) return;
+
+    const userMessage = {
+      type: "user",
+      text: message
+    };
+
+    setMessages([...messages, userMessage]);
+    setMessage("");
+
+    try {
+      const response = await axios.post(
+        "http://172.16.217.175:8000/chat/chatbot/",
+        {
+          question: message
+        }
+      );
+
+      if (response.data && response.data.message) {
+        const botMessage = {
+          type: "bot",
+          text: response.data.message
+        };
+        setMessages((prev) => [...prev, botMessage]);
+      }
+    } catch (error) {
+      console.error("Error sending message:", error);
+      const errorMessage = {
+        type: "bot",
+        text: "죄송합니다. 메시지 전송 중 오류가 발생했습니다."
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+    }
   };
 
   return (
@@ -141,7 +178,7 @@ export default function ChatScreen() {
                 multiline
               />
             </View>
-            <TouchableOpacity style={styles.sendButton}>
+            <TouchableOpacity style={styles.sendButton} onPress={handleSend}>
               <MaterialIcons name="send" size={22} color="#fff" />
             </TouchableOpacity>
           </View>

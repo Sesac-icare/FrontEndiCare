@@ -24,6 +24,7 @@ export default function SignUp() {
   const [passwordMismatch, setPasswordMismatch] = useState(false);
   const [showConfirmIcon, setShowConfirmIcon] = useState(false);
   const [termAgreed, setTermAgreed] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
 
   const handleSignUp = () => {
     if (!username || !email || !password || !passwordCheck) {
@@ -54,7 +55,8 @@ export default function SignUp() {
       .then((response) => {
         const data = response.data;
         if (data.email) {
-          navigation.navigate("MainTabs");
+          alert("회원가입이 완료되었습니다. 로그인해주세요.");
+          navigation.navigate("Login");
         }
       })
       .catch((error) => {
@@ -67,49 +69,6 @@ export default function SignUp() {
         }
       });
   };
-
-  // const handleSignUp = () => {
-  //   if (!username || !email || !password || !passwordCheck) {
-  //     alert("모든 필드를 입력해주세요.");
-  //     return;
-  //   }
-
-  //   if (passwordMismatch) {
-  //     alert("비밀번호가 일치하지 않습니다.");
-  //     return;
-  //   }
-
-  //   const signUpData = {
-  //     username,
-  //     email,
-  //     password,
-  //     passwordCheck,
-  //     term_agreed: termAgreed
-  //   };
-
-  //   fetch("api/users/register", {
-  //     method: "POST",
-  //     headers: {
-  //       "Content-Type": "application/json"
-  //     },
-  //     body: JSON.stringify(signUpData)
-  //   })
-  //     .then((response) => response.json())
-  //     .then((data) => {
-  //       if (data.email) {
-  //         setShowModal(true);
-  //       }
-  //     })
-  //     .catch((error) => {
-  //       if (error.response?.status === 400) {
-  //         if (error.response.data.email) {
-  //           alert("이미 사용 중인 이메일입니다.");
-  //         } else if (error.response.data.password) {
-  //           alert("비밀번호가 일치하지 않습니다.");
-  //         }
-  //       }
-  //     });
-  // };
 
   const handleAgree = () => {
     setTermAgreed(true);
@@ -227,9 +186,11 @@ export default function SignUp() {
                   color="#016A4C"
                 />
               </TouchableOpacity>
-              <Text style={styles.checkboxLabel}>
-                고유식별정보 수집 및 이용에 동의합니다
-              </Text>
+              <TouchableOpacity onPress={() => setShowTermsModal(true)}>
+                <Text style={styles.checkboxLabel}>
+                  고유식별정보 수집 및 이용에 동의합니다
+                </Text>
+              </TouchableOpacity>
             </View>
           </View>
 
@@ -271,6 +232,63 @@ export default function SignUp() {
               >
                 <Text style={styles.agreeButtonText}>동의하기</Text>
               </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+
+        <Modal
+          visible={showTermsModal}
+          transparent={true}
+          animationType="slide"
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>
+                  고유식별정보의 수집 및 이용 동의
+                </Text>
+                <TouchableOpacity
+                  onPress={() => setShowTermsModal(false)}
+                  style={styles.closeButton}
+                >
+                  <MaterialIcons name="close" size={24} color="#666" />
+                </TouchableOpacity>
+              </View>
+              <ScrollView style={styles.modalBody}>
+                <View style={styles.modalSection}>
+                  <Text style={styles.modalSubTitle}>수집 및 이용 목적</Text>
+                  <Text style={styles.modalText}>
+                    • 주민등록번호는 아이케어에서 의료법시행령
+                    제42조의2(민감정보 및 고유식별정보의 처리)에 근거하여
+                    처리하고 있으며, 그 외 목적으로 처리 및 이용하고 있지
+                    않습니다.
+                  </Text>
+                </View>
+                <View style={styles.modalSection}>
+                  <Text style={styles.modalSubTitle}>보관 방침</Text>
+                  <Text style={styles.modalText}>
+                    • 회원님의 휴대폰에만 저장하며, 아이케어에서는 별도로
+                    보관하지 않습니다.
+                  </Text>
+                </View>
+              </ScrollView>
+              <View style={styles.modalFooter}>
+                <TouchableOpacity
+                  style={styles.modalButton}
+                  onPress={() => setShowTermsModal(false)}
+                >
+                  <Text style={styles.modalButtonTextCancel}>취소</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.modalButton, styles.modalButtonConfirm]}
+                  onPress={() => {
+                    setTermAgreed(true);
+                    setShowTermsModal(false);
+                  }}
+                >
+                  <Text style={styles.modalButtonTextConfirm}>동의하기</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
         </Modal>
@@ -362,30 +380,68 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     padding: 20,
-    minHeight: 260
+    minHeight: "50%",
+    maxHeight: "80%"
   },
   modalHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 20
+    paddingBottom: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f0f0f0"
   },
   modalTitle: {
     fontSize: 18,
     fontWeight: "bold",
-    color: "#222"
+    color: "#016A4C"
   },
   closeButton: {
     padding: 4
   },
   modalBody: {
-    marginBottom: 20
+    flex: 1
+  },
+  modalSection: {
+    marginVertical: 15
+  },
+  modalSubTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#333",
+    marginBottom: 10
   },
   modalText: {
     fontSize: 14,
+    lineHeight: 22,
+    color: "#666"
+  },
+  modalFooter: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingTop: 15,
+    borderTopWidth: 1,
+    borderTopColor: "#f0f0f0"
+  },
+  modalButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 8,
+    marginHorizontal: 5,
+    alignItems: "center"
+  },
+  modalButtonConfirm: {
+    backgroundColor: "#016A4C"
+  },
+  modalButtonTextCancel: {
+    fontSize: 16,
     color: "#666",
-    lineHeight: 20,
-    marginBottom: 16
+    fontWeight: "600"
+  },
+  modalButtonTextConfirm: {
+    fontSize: 16,
+    color: "#fff",
+    fontWeight: "600"
   },
   agreeButton: {
     backgroundColor: "#016A4C",
@@ -418,16 +474,16 @@ const styles = StyleSheet.create({
     marginLeft: 4
   },
   checkboxContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginTop: 10,
-    marginBottom: 20,
+    marginBottom: 20
   },
   checkbox: {
-    marginRight: 8,
+    marginRight: 8
   },
   checkboxLabel: {
     fontSize: 14,
-    color: '#666',
-  },
+    color: "#666"
+  }
 });

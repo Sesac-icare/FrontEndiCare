@@ -94,11 +94,30 @@ function TabNavigator() {
       />
       <Tab.Screen
         name="마이페이지"
-        component={MyPageStackScreen} // MyPage 대신 MyPageStackScreen 사용
+        component={MyPageStackScreen}
         options={{
           tabBarIcon: ({ color }) => (
-            <MaterialIcons name="person" size={28} color={color} />
-          )
+            <MaterialIcons name="person-outline" size={24} color={color} />
+          ),
+          tabBarStyle: {
+            height: 60,
+            borderTopWidth: 1,
+            borderTopColor: "#f0f0f0",
+            paddingBottom: 20,
+            paddingTop: 10,
+            height: 80
+          },
+          tabBarActiveTintColor: "#016a4c",
+          tabBarInactiveTintColor: "#CCCCCC",
+          tabBarLabelStyle: {
+            paddingBottom: 8,
+            fontSize: 12,
+            fontWeight: "500",
+            marginTop: -4
+          },
+          tabBarIconStyle: {
+            marginTop: -4
+          }
         }}
       />
     </Tab.Navigator>

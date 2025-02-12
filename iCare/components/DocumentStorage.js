@@ -8,10 +8,13 @@ import {
   Image,
   ScrollView,
   Modal,
-  Platform
+  Platform,
+  Alert
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
+import axios from "axios";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function DocumentStorage({ route }) {
   const navigation = useNavigation();
@@ -20,13 +23,60 @@ export default function DocumentStorage({ route }) {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedPrescription, setSelectedPrescription] = useState(null);
   const [prescriptions, setPrescriptions] = useState([]);
+  const [userToken, setUserToken] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (route.params?.newPrescription) {
-      setPrescriptions((prevPrescriptions) => [
-        route.params.newPrescription,
-        ...prevPrescriptions
-      ]);
+    const getToken = async () => {
+      try {
+        const token = await AsyncStorage.getItem("userToken");
+        setUserToken(token);
+      } catch (error) {
+        console.error("토큰 가져오기 실패:", error);
+      }
+    };
+    getToken();
+  }, []);
+
+  const fetchPrescriptions = async () => {
+    try {
+      const response = await axios.get(
+        "http://172.16.217.175:8000/prescriptions/list/",
+        {
+          headers: {
+            Authorization: `Token ${userToken}`
+          }
+        }
+      );
+
+      if (response.data.results) {
+        const formattedPrescriptions = response.data.results.map((item) => ({
+          documentId: item.envelope_id.toString(),
+          childName: item.child_name,
+          date: new Date(item.prescription_date).toLocaleDateString(),
+          pharmacyName: item.pharmacy_name,
+          prescriptionNumber: item.prescription_number
+        }));
+
+        setPrescriptions(formattedPrescriptions);
+      }
+    } catch (error) {
+      console.error("처방전 목록 가져오기 실패:", error);
+      Alert.alert("오류", "처방전 목록을 불러오는데 실패했습니다.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (userToken) {
+      fetchPrescriptions();
+    }
+  }, [userToken]);
+
+  useEffect(() => {
+    if (route.params?.newPrescription && userToken) {
+      fetchPrescriptions();
     }
   }, [route.params?.newPrescription]);
 

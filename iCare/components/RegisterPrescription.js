@@ -7,12 +7,15 @@ import {
   SafeAreaView,
   Image,
   TextInput,
-  Platform
+  Platform,
+  Alert
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import * as ImagePicker from "expo-image-picker";
 import { Camera as ExpoCamera } from "expo-camera";
+import axios from "axios";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function RegisterPrescription() {
   const navigation = useNavigation();
@@ -23,6 +26,19 @@ export default function RegisterPrescription() {
   const [scanning, setScanning] = useState(false);
   const [camera, setCamera] = useState(null);
   const [nameError, setNameError] = useState(false);
+  const [userToken, setUserToken] = useState(null);
+
+  useEffect(() => {
+    const getToken = async () => {
+      try {
+        const token = await AsyncStorage.getItem("userToken");
+        setUserToken(token);
+      } catch (error) {
+        console.error("토큰 가져오기 실패:", error);
+      }
+    };
+    getToken();
+  }, []);
 
   // 카메라 권한 요청
   const requestCameraPermission = async () => {
@@ -95,7 +111,7 @@ export default function RegisterPrescription() {
   };
 
   // 등록하기
-  const handleRegister = () => {
+  const handleRegister = async () => {
     if (!childName.trim()) {
       setNameError(true);
       alert("자녀 이름을 입력해주세요.");
@@ -107,19 +123,54 @@ export default function RegisterPrescription() {
       return;
     }
 
-    // 새로운 처방전 데이터 생성
-    const prescriptionData = {
-      childName: childName,
-      imageUri: image,
-      date: new Date().toISOString().split("T")[0].replace(/-/g, "."),
-      pharmacyName: "행복약국",
-      documentId: `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-    };
+    try {
+      // 로딩 표시
+      setScanning(true);
 
-    // DocumentStorage로 돌아가면서 새 처방전 데이터 전달
-    navigation.navigate("DocumentStorage", {
-      newPrescription: prescriptionData
-    });
+      const formData = new FormData();
+
+      // 이미지 파일 추가
+      formData.append("image", {
+        uri: image,
+        name: "prescription.jpg",
+        type: "image/jpeg"
+      });
+
+      formData.append("child_name", childName);
+
+      // 타임아웃 시간을 늘리고 재시도 로직 추가
+      const response = await axios.post(
+        "http://172.16.217.175:8000/prescriptions/ocr/",
+        formData,
+        {
+          headers: {
+            Authorization: `Token ${userToken}`,
+            "Content-Type": "multipart/form-data"
+          },
+          timeout: 30000, // 30초로 타임아웃 증가
+          maxContentLength: Infinity,
+          maxBodyLength: Infinity
+        }
+      );
+
+      if (response.data.message) {
+        Alert.alert("등록 성공", "처방전이 성공적으로 등록되었습니다.", [
+          {
+            text: "확인",
+            onPress: () => navigation.navigate("DocumentStorage")
+          }
+        ]);
+      }
+    } catch (error) {
+      console.error("처방전 등록 에러:", error.response?.data || error.message);
+      Alert.alert(
+        "등록 실패",
+        "처방전 등록 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요."
+      );
+    } finally {
+      // 로딩 표시 제거
+      setScanning(false);
+    }
   };
 
   if (showCamera) {

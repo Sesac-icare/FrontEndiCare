@@ -16,6 +16,8 @@ import DocumentStorage from "./components/DocumentStorage";
 import RegisterPrescription from "./components/RegisterPrescription";
 import { Camera as ExpoCamera } from "expo-camera";
 import ChatScreen from "./components/ChatScreen";
+import PrescriptionDetail from "./components/PrescriptionDetail";
+import MedicationDetail from "./components/MedicationDetail";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -39,10 +41,9 @@ function MyPageStackScreen() {
     <MyPageStack.Navigator screenOptions={{ headerShown: false }}>
       <MyPageStack.Screen name="MyPageMain" component={MyPage} />
       <MyPageStack.Screen name="DocumentStorage" component={DocumentStorage} />
-      <MyPageStack.Screen
-        name="RegisterPrescription"
-        component={RegisterPrescription}
-      />
+      <MyPageStack.Screen name="PrescriptionDetail" component={PrescriptionDetail} />
+      <MyPageStack.Screen name="MedicationDetail" component={MedicationDetail} />
+      <MyPageStack.Screen name="RegisterPrescription" component={RegisterPrescription} />
     </MyPageStack.Navigator>
   );
 }

@@ -53,7 +53,13 @@ export default function DocumentStorage({ route }) {
         const formattedPrescriptions = response.data.results.map((item) => ({
           documentId: item.envelope_id.toString(),
           childName: item.child_name,
-          date: new Date(item.prescription_date).toLocaleDateString(),
+          date: new Date(item.prescription_date)
+            .toLocaleDateString("ko-KR", {
+              year: "numeric",
+              month: "2-digit",
+              day: "2-digit"
+            })
+            .replace(/\. /g, "."),
           pharmacyName: item.pharmacy_name,
           prescriptionNumber: item.prescription_number
         }));
@@ -146,10 +152,9 @@ export default function DocumentStorage({ route }) {
               <TouchableOpacity
                 key={prescription.documentId}
                 style={styles.prescriptionItem}
-                onPress={() => {
-                  setSelectedImage(prescription.imageUri);
-                  setShowImageModal(true);
-                }}
+                onPress={() =>
+                  navigation.navigate("PrescriptionDetail", { prescription })
+                }
               >
                 <View style={styles.itemContent}>
                   <View style={styles.nameTag}>

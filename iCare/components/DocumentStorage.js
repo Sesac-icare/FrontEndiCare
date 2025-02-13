@@ -322,15 +322,11 @@ const styles = StyleSheet.create({
   filterButton: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#f9fafb",
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 8
+    gap: 4
   },
   filterText: {
     fontSize: 14,
-    color: "#666",
-    marginRight: 4
+    color: "#666666"
   },
   contentWrapper: {
     flex: 1,

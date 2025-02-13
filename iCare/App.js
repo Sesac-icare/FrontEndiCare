@@ -97,7 +97,7 @@ function TabNavigator() {
         component={MyPageStackScreen}
         options={{
           tabBarIcon: ({ color }) => (
-            <MaterialIcons name="person-outline" size={24} color={color} />
+            <MaterialIcons name="person" size={28} color={color} />
           ),
           tabBarStyle: {
             height: 60,

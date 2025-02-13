@@ -157,7 +157,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 30
   },
   buttonIcon: {
-    transform: [{ scale: 2 }],
     marginLeft: 0
   },
   buttonText: {
@@ -169,7 +168,6 @@ const styles = StyleSheet.create({
     marginLeft: 0
   },
   arrowIcon: {
-    transform: [{ scale: 2 }],
     marginLeft: "auto"
   },
   menuSection: {

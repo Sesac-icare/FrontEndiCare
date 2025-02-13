@@ -13,8 +13,10 @@ import {
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import axios from "axios";
+import { useNavigation } from "@react-navigation/native";
 
 export default function ChatScreen() {
+  const navigation = useNavigation();
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([
     {
@@ -45,7 +47,7 @@ export default function ChatScreen() {
   };
 
   const handlePrescriptionUpload = () => {
-    // Implementation for prescription upload
+    navigation.navigate("RegisterPrescription");
   };
 
   const handleSend = async () => {

@@ -8,7 +8,7 @@ import {
   Image,
   TextInput,
   ScrollView,
-  Modal
+  Modal,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
@@ -47,11 +47,11 @@ export default function SignUp() {
       email,
       password,
       passwordCheck,
-      term_agreed: termAgreed
+      term_agreed: termAgreed,
     };
 
     axios
-      .post("http://172.16.217.175:8000/users/register/", signUpData)
+      .post("http://172.16.220.253:8000/users/register/", signUpData)
       .then((response) => {
         const data = response.data;
         if (data.email) {
@@ -299,11 +299,11 @@ export default function SignUp() {
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: "#fff"
+    backgroundColor: "#fff",
   },
   container: {
     flex: 1,
-    backgroundColor: "#fff"
+    backgroundColor: "#fff",
   },
   header: {
     height: 60,
@@ -313,40 +313,40 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "#f0f0f0",
     backgroundColor: "#fff",
-    position: "relative"
+    position: "relative",
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: "bold",
     flex: 1,
-    textAlign: "center"
+    textAlign: "center",
   },
   backButton: {
     position: "absolute",
     left: 20,
-    padding: 4
+    padding: 4,
   },
   logo: {
     width: 48,
-    height: 48
+    height: 48,
   },
   content: {
     flex: 1,
     padding: 20,
-    paddingTop: 40
+    paddingTop: 40,
   },
   inputWrapper: {
     padding: 20,
-    marginTop: 40 // 상단 여백 추가
+    marginTop: 40, // 상단 여백 추가
   },
   inputSection: {
-    marginBottom: 20
+    marginBottom: 20,
   },
   label: {
     fontSize: 14,
     color: "#016A4C",
     marginBottom: 8,
-    fontWeight: "600"
+    fontWeight: "600",
   },
   input: {
     borderWidth: 1,
@@ -354,7 +354,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 12,
     fontSize: 14,
-    color: "#222222"
+    color: "#222222",
   },
   signUpButton: {
     backgroundColor: "#016A4C",
@@ -362,17 +362,17 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     marginTop: 20,
     marginBottom: 40,
-    alignItems: "center"
+    alignItems: "center",
   },
   signUpButtonText: {
     fontSize: 16,
     color: "#fff",
-    fontWeight: "600"
+    fontWeight: "600",
   },
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0, 0, 0, 0.5)",
-    justifyContent: "flex-end"
+    justifyContent: "flex-end",
   },
   modalContent: {
     backgroundColor: "#fff",
@@ -380,7 +380,7 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 20,
     padding: 20,
     minHeight: "50%",
-    maxHeight: "80%"
+    maxHeight: "80%",
   },
   modalHeader: {
     flexDirection: "row",
@@ -388,101 +388,101 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingBottom: 15,
     borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0"
+    borderBottomColor: "#f0f0f0",
   },
   modalTitle: {
     fontSize: 18,
     fontWeight: "bold",
-    color: "#016A4C"
+    color: "#016A4C",
   },
   closeButton: {
-    padding: 4
+    padding: 4,
   },
   modalBody: {
-    flex: 1
+    flex: 1,
   },
   modalSection: {
-    marginVertical: 15
+    marginVertical: 15,
   },
   modalSubTitle: {
     fontSize: 16,
     fontWeight: "600",
     color: "#333",
-    marginBottom: 10
+    marginBottom: 10,
   },
   modalText: {
     fontSize: 14,
     lineHeight: 22,
-    color: "#666"
+    color: "#666",
   },
   modalFooter: {
     flexDirection: "row",
     justifyContent: "space-between",
     paddingTop: 15,
     borderTopWidth: 1,
-    borderTopColor: "#f0f0f0"
+    borderTopColor: "#f0f0f0",
   },
   modalButton: {
     flex: 1,
     paddingVertical: 12,
     borderRadius: 8,
     marginHorizontal: 5,
-    alignItems: "center"
+    alignItems: "center",
   },
   modalButtonConfirm: {
-    backgroundColor: "#016A4C"
+    backgroundColor: "#016A4C",
   },
   modalButtonTextCancel: {
     fontSize: 16,
     color: "#666",
-    fontWeight: "600"
+    fontWeight: "600",
   },
   modalButtonTextConfirm: {
     fontSize: 16,
     color: "#fff",
-    fontWeight: "600"
+    fontWeight: "600",
   },
   agreeButton: {
     backgroundColor: "#016A4C",
     paddingVertical: 15,
     borderRadius: 10,
     alignItems: "center",
-    marginBottom: 20
+    marginBottom: 20,
   },
   agreeButtonText: {
     color: "#fff",
     fontSize: 16,
-    fontWeight: "600"
+    fontWeight: "600",
   },
   passwordInputContainer: {
     position: "relative",
     flexDirection: "row",
-    alignItems: "center"
+    alignItems: "center",
   },
   passwordInput: {
-    flex: 1
+    flex: 1,
   },
   errorIcon: {
     position: "absolute",
-    right: 12
+    right: 12,
   },
   errorText: {
     color: "#E53935",
     fontSize: 12,
     marginTop: 4,
-    marginLeft: 4
+    marginLeft: 4,
   },
   checkboxContainer: {
     flexDirection: "row",
     alignItems: "center",
     marginTop: 10,
-    marginBottom: 20
+    marginBottom: 20,
   },
   checkbox: {
-    marginRight: 8
+    marginRight: 8,
   },
   checkboxLabel: {
     fontSize: 14,
-    color: "#666"
-  }
+    color: "#666",
+  },
 });

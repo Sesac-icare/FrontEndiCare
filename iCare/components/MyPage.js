@@ -6,34 +6,170 @@ import {
   TouchableOpacity,
   SafeAreaView,
   Image,
-  Alert
+  Alert,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
+import axios from "axios";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function MyPage() {
   const navigation = useNavigation();
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     Alert.alert(
       "로그아웃",
       "로그아웃 하시겠습니까?",
       [
         {
           text: "취소",
-          style: "cancel"
+          style: "cancel",
         },
         {
           text: "로그아웃",
-          onPress: () => {
-            // TODO: 토큰 제거 로직 추가 (AsyncStorage 사용 시)
-            navigation.reset({
-              index: 0,
-              routes: [{ name: "Login" }]
-            });
+          onPress: async () => {
+            try {
+              // 저장된 토큰 가져오기
+              const userToken = await AsyncStorage.getItem("userToken");
+
+              if (!userToken) {
+                Alert.alert("오류", "로그인 정보가 없습니다.");
+                navigation.reset({
+                  index: 0,
+                  routes: [{ name: "Login" }],
+                });
+                return;
+              }
+
+              const response = await axios.post(
+                "http://172.16.220.253:8000/users/logout/",
+                {}, // 빈 객체 (POST 요청이지만 body 데이터는 필요 없음)
+                {
+                  headers: {
+                    Authorization: `Token ${userToken}`,
+                    "Content-Type": "application/json",
+                  },
+                }
+              );
+
+              // 로그아웃 성공
+              await AsyncStorage.removeItem("userToken");
+              navigation.reset({
+                index: 0,
+                routes: [{ name: "Login" }],
+              });
+            } catch (error) {
+              console.error("Logout error:", error.response?.data);
+
+              if (error.response) {
+                // 서버가 응답한 경우
+                if (error.response.status === 401) {
+                  Alert.alert("오류", "인증이 만료되었습니다.");
+                } else {
+                  Alert.alert("오류", "로그아웃 처리 중 오류가 발생했습니다.");
+                }
+                // 어떤 에러가 발생하더라도 로컬 토큰은 제거하고 로그인 화면으로 이동
+                await AsyncStorage.removeItem("userToken");
+                navigation.reset({
+                  index: 0,
+                  routes: [{ name: "Login" }],
+                });
+              } else if (error.request) {
+                // 요청은 보냈지만 응답을 받지 못한 경우
+                Alert.alert(
+                  "오류",
+                  "서버와 통신할 수 없습니다. 인터넷 연결을 확인해주세요."
+                );
+              } else {
+                // 요청 설정 중 에러가 발생한 경우
+                Alert.alert("오류", "로그아웃 중 오류가 발생했습니다.");
+              }
+            }
           },
-          style: "destructive"
-        }
+          style: "destructive",
+        },
+      ],
+      { cancelable: false }
+    );
+  };
+
+  const handleDeleteAccount = async () => {
+    Alert.alert(
+      "회원 탈퇴",
+      "정말로 탈퇴하시겠습니까?",
+      [
+        {
+          text: "취소",
+          style: "cancel",
+        },
+        {
+          text: "탈퇴",
+          onPress: async () => {
+            try {
+              // 저장된 토큰 가져오기
+              const userToken = await AsyncStorage.getItem("userToken");
+
+              if (!userToken) {
+                Alert.alert("오류", "로그인 정보가 없습니다.");
+                navigation.reset({
+                  index: 0,
+                  routes: [{ name: "Login" }],
+                });
+                return;
+              }
+
+              const response = await axios.delete(
+                "http://172.16.220.253:8000/users/delete/",
+                {
+                  headers: {
+                    Authorization: `Token ${userToken}`,
+                    "Content-Type": "application/json",
+                  },
+                }
+              );
+
+              // 회원탈퇴 성공
+              await AsyncStorage.removeItem("userToken");
+              await AsyncStorage.removeItem("userInfo");
+
+              Alert.alert("알림", "회원 탈퇴가 완료되었습니다.", [
+                {
+                  text: "확인",
+                  onPress: () => {
+                    navigation.reset({
+                      index: 0,
+                      routes: [{ name: "Login" }],
+                    });
+                  },
+                },
+              ]);
+            } catch (error) {
+              console.error("Delete account error:", error.response?.data);
+
+              if (error.response) {
+                if (error.response.status === 401) {
+                  Alert.alert("오류", "인증이 만료되었습니다.");
+                  // 인증 만료 시 로그인 화면으로 이동
+                  await AsyncStorage.removeItem("userToken");
+                  navigation.reset({
+                    index: 0,
+                    routes: [{ name: "Login" }],
+                  });
+                } else {
+                  Alert.alert("오류", "회원 탈퇴 처리 중 오류가 발생했습니다.");
+                }
+              } else if (error.request) {
+                Alert.alert(
+                  "오류",
+                  "서버와 통신할 수 없습니다. 인터넷 연결을 확인해주세요."
+                );
+              } else {
+                Alert.alert("오류", "회원 탈퇴 중 오류가 발생했습니다.");
+              }
+            }
+          },
+          style: "destructive",
+        },
       ],
       { cancelable: false }
     );
@@ -96,7 +232,10 @@ export default function MyPage() {
               <MaterialIcons name="chevron-right" size={24} color="#CCCCCC" />
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.menuItem}>
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={handleDeleteAccount}
+            >
               <Text style={styles.menuText}>회원탈퇴</Text>
               <MaterialIcons name="chevron-right" size={24} color="#CCCCCC" />
             </TouchableOpacity>
@@ -110,11 +249,11 @@ export default function MyPage() {
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: "#f9fafb"
+    backgroundColor: "#f9fafb",
   },
   container: {
     flex: 1,
-    backgroundColor: "#f9fafb"
+    backgroundColor: "#f9fafb",
   },
   header: {
     flexDirection: "row",
@@ -122,18 +261,18 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: "#fff",
     borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0"
+    borderBottomColor: "#f0f0f0",
   },
   logo: {
     width: 48,
     height: 48,
     marginLeft: "auto",
-    marginRight: "auto"
+    marginRight: "auto",
   },
   content: {
     flex: 1,
     padding: 20,
-    backgroundColor: "#f9fafb"
+    backgroundColor: "#f9fafb",
   },
   buttonCard: {
     backgroundColor: "#fff",
@@ -145,19 +284,19 @@ const styles = StyleSheet.create({
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
-      height: 1
+      height: 1,
     },
     shadowOpacity: 0.2,
-    shadowRadius: 2
+    shadowRadius: 2,
   },
   buttonContent: {
     flexDirection: "row",
     alignItems: "center",
     width: "100%",
-    paddingHorizontal: 30
+    paddingHorizontal: 30,
   },
   buttonIcon: {
-    marginLeft: 0
+    marginLeft: 0,
   },
   buttonText: {
     fontSize: 18,
@@ -165,10 +304,10 @@ const styles = StyleSheet.create({
     fontWeight: "900",
     flex: 1,
     textAlign: "center",
-    marginLeft: 0
+    marginLeft: 0,
   },
   arrowIcon: {
-    marginLeft: "auto"
+    marginLeft: "auto",
   },
   menuSection: {
     marginTop: 20,
@@ -178,10 +317,10 @@ const styles = StyleSheet.create({
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
-      height: 1
+      height: 1,
     },
     shadowOpacity: 0.2,
-    shadowRadius: 2
+    shadowRadius: 2,
   },
   menuItem: {
     flexDirection: "row",
@@ -190,12 +329,12 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
     paddingHorizontal: 20,
     borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0"
+    borderBottomColor: "#f0f0f0",
   },
   menuText: {
     fontSize: 16,
     color: "#666666",
-    fontWeight: "500"
+    fontWeight: "500",
   },
   logoutButton: {
     flexDirection: "row",
@@ -203,12 +342,12 @@ const styles = StyleSheet.create({
     padding: 16,
     borderTopWidth: 1,
     borderTopColor: "#f0f0f0",
-    marginTop: "auto"
+    marginTop: "auto",
   },
   logoutText: {
     marginLeft: 8,
     fontSize: 16,
     color: "#E53935",
-    fontWeight: "500"
-  }
+    fontWeight: "500",
+  },
 });

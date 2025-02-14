@@ -8,7 +8,7 @@ import {
   Image,
   TextInput,
   Platform,
-  Alert
+  Alert,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
@@ -66,7 +66,7 @@ export default function RegisterPrescription() {
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
         aspect: [4, 3],
-        quality: 1
+        quality: 1,
       });
 
       if (!result.canceled) {
@@ -95,11 +95,11 @@ export default function RegisterPrescription() {
     try {
       setScanning(true);
       const photo = await camera.takePictureAsync({
-        quality: 1
+        quality: 1,
       });
 
       if (photo) {
-        setImage(photo.uri);
+        setImage(photo.uri); 
         setShowCamera(false);
       }
     } catch (error) {
@@ -133,23 +133,23 @@ export default function RegisterPrescription() {
       formData.append("image", {
         uri: image,
         name: "prescription.jpg",
-        type: "image/jpeg"
+        type: "image/jpeg",
       });
 
       formData.append("child_name", childName);
 
       // 타임아웃 시간을 늘리고 재시도 로직 추가
       const response = await axios.post(
-        "http://172.16.217.175:8000/prescriptions/ocr/",
+        "http://172.16.220.253:8000/prescriptions/ocr/",
         formData,
         {
           headers: {
             Authorization: `Token ${userToken}`,
-            "Content-Type": "multipart/form-data"
+            "Content-Type": "multipart/form-data",
           },
           timeout: 30000, // 30초로 타임아웃 증가
           maxContentLength: Infinity,
-          maxBodyLength: Infinity
+          maxBodyLength: Infinity,
         }
       );
 
@@ -157,8 +157,8 @@ export default function RegisterPrescription() {
         Alert.alert("등록 성공", "처방전이 성공적으로 등록되었습니다.", [
           {
             text: "확인",
-            onPress: () => navigation.navigate("DocumentStorage")
-          }
+            onPress: () => navigation.navigate("DocumentStorage"),
+          },
         ]);
       }
     } catch (error) {
@@ -236,7 +236,8 @@ export default function RegisterPrescription() {
             <TextInput
               style={[
                 styles.input,
-                (nameError || (image && !childName.trim())) && styles.inputError
+                (nameError || (image && !childName.trim())) &&
+                  styles.inputError,
               ]}
               placeholder="이름을 입력해주세요"
               placeholderTextColor="#999"
@@ -328,11 +329,11 @@ export default function RegisterPrescription() {
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: "#fff"
+    backgroundColor: "#fff",
   },
   container: {
     flex: 1,
-    backgroundColor: "#fff"
+    backgroundColor: "#fff",
   },
   header: {
     flexDirection: "row",
@@ -342,32 +343,32 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "#f0f0f0",
     backgroundColor: "#fff",
-    position: "relative"
+    position: "relative",
   },
   backButton: {
     position: "absolute",
     left: 20,
-    zIndex: 1
+    zIndex: 1,
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: "600",
     color: "#222",
-    textAlign: "center"
+    textAlign: "center",
   },
   content: {
     flex: 1,
     padding: 24,
-    backgroundColor: "#f9fafb"
+    backgroundColor: "#f9fafb",
   },
   inputSection: {
-    marginBottom: 24
+    marginBottom: 24,
   },
   label: {
     fontSize: 16,
     color: "#016A4C",
     marginBottom: 8,
-    fontWeight: "600"
+    fontWeight: "600",
   },
   input: {
     borderWidth: 1,
@@ -376,7 +377,7 @@ const styles = StyleSheet.create({
     padding: 16,
     fontSize: 16,
     color: "#222",
-    backgroundColor: "#fff"
+    backgroundColor: "#fff",
   },
   imageContainer: {
     flex: 1,
@@ -386,31 +387,31 @@ const styles = StyleSheet.create({
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
-      height: 1
+      height: 1,
     },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 2
+    elevation: 2,
   },
   emptyContainer: {
     flex: 1,
     alignItems: "center",
-    justifyContent: "center"
+    justifyContent: "center",
   },
   emptyText: {
     fontSize: 16,
     color: "#666",
     textAlign: "center",
     marginTop: 16,
-    lineHeight: 24
+    lineHeight: 24,
   },
   previewContainer: {
     flex: 1,
-    position: "relative"
+    position: "relative",
   },
   preview: {
     flex: 1,
-    borderRadius: 12
+    borderRadius: 12,
   },
   previewStatus: {
     position: "absolute",
@@ -418,7 +419,7 @@ const styles = StyleSheet.create({
     left: 16,
     right: 16,
     flexDirection: "row",
-    justifyContent: "flex-start"
+    justifyContent: "flex-start",
   },
   statusBadge: {
     flexDirection: "row",
@@ -430,62 +431,62 @@ const styles = StyleSheet.create({
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
-      height: 1
+      height: 1,
     },
     shadowOpacity: 0.2,
     shadowRadius: 2,
-    elevation: 3
+    elevation: 3,
   },
   statusText: {
     color: "#016A4C",
     fontSize: 14,
     fontWeight: "600",
-    marginLeft: 4
+    marginLeft: 4,
   },
   camera: {
     flex: 1,
-    backgroundColor: "#000"
+    backgroundColor: "#000",
   },
   cameraContainer: {
     flex: 1,
-    backgroundColor: "transparent"
+    backgroundColor: "transparent",
   },
   cameraHeader: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     padding: 20,
-    backgroundColor: "rgba(0,0,0,0.3)"
+    backgroundColor: "rgba(0,0,0,0.3)",
   },
   cameraTitle: {
     color: "#fff",
     fontSize: 18,
-    fontWeight: "600"
+    fontWeight: "600",
   },
   closeButton: {
     position: "absolute",
     left: 20,
     padding: 8,
-    borderRadius: 20
+    borderRadius: 20,
   },
   scanFrame: {
     flex: 1,
     margin: 40,
     borderWidth: 1,
     borderColor: "#016A4C",
-    borderStyle: "dashed"
+    borderStyle: "dashed",
   },
   scanCorner: {
     position: "absolute",
     width: 20,
     height: 20,
     borderColor: "#016A4C",
-    borderWidth: 3
+    borderWidth: 3,
   },
   cameraFooter: {
     padding: 24,
     backgroundColor: "rgba(0,0,0,0.3)",
-    alignItems: "center"
+    alignItems: "center",
   },
   captureButton: {
     width: 70,
@@ -493,23 +494,23 @@ const styles = StyleSheet.create({
     borderRadius: 35,
     backgroundColor: "rgba(255,255,255,0.3)",
     justifyContent: "center",
-    alignItems: "center"
+    alignItems: "center",
   },
   captureButtonInner: {
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: "#fff"
+    backgroundColor: "#fff",
   },
   scanningIndicator: {
     padding: 12,
     borderRadius: 20,
-    backgroundColor: "rgba(1,106,76,0.8)"
+    backgroundColor: "rgba(1,106,76,0.8)",
   },
   scanningText: {
     color: "#fff",
     fontSize: 14,
-    fontWeight: "600"
+    fontWeight: "600",
   },
   bottomButtons: {
     padding: 20,
@@ -517,7 +518,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderTopWidth: 1,
     borderTopColor: "#f0f0f0",
-    gap: 12
+    gap: 12,
   },
   cameraButton: {
     backgroundColor: "#016A4C",
@@ -527,25 +528,25 @@ const styles = StyleSheet.create({
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
-      height: 2
+      height: 2,
     },
     shadowOpacity: 0.2,
     shadowRadius: 4,
-    elevation: 4
+    elevation: 4,
   },
   buttonContent: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center"
+    justifyContent: "center",
   },
   buttonText: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#fff"
+    color: "#fff",
   },
   buttonTextWithIcon: {
     marginLeft: 8,
-    marginRight: 8
+    marginRight: 8,
   },
   uploadButton: {
     flexDirection: "row",
@@ -555,21 +556,21 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#E8E8E8"
+    borderColor: "#E8E8E8",
   },
   uploadButtonText: {
     fontSize: 16,
     fontWeight: "600",
     color: "#222",
-    marginLeft: 8
+    marginLeft: 8,
   },
   inputError: {
-    borderColor: "#FF4444"
+    borderColor: "#FF4444",
   },
   errorText: {
     color: "#FF4444",
     fontSize: 12,
     marginTop: 4,
-    marginLeft: 4
-  }
+    marginLeft: 4,
+  },
 });

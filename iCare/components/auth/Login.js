@@ -9,11 +9,12 @@ import {
   TextInput,
   KeyboardAvoidingView,
   Platform,
-  ScrollView
+  ScrollView,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import axios from "axios";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function Login() {
   const navigation = useNavigation();
@@ -28,21 +29,25 @@ export default function Login() {
 
     try {
       const response = await axios.post(
-        "http://172.16.217.175:8000/users/login/",
+        "http://172.16.220.253:8000/users/login/",
         {
           email,
-          password
+          password,
         },
         {
           headers: {
-            "Content-Type": "application/json"
-          }
+            "Content-Type": "application/json",
+          },
         }
       );
 
       if (response.data.token) {
         const { token, user } = response.data;
-        // TODO: 토큰을 안전하게 저장하는 로직 추가 (예: AsyncStorage)
+        // 토큰 저장
+        await AsyncStorage.setItem("userToken", token);
+        // 사용자 정보도 필요하다면 저장
+        await AsyncStorage.setItem("userInfo", JSON.stringify(user));
+
         navigation.navigate("MainTabs");
       }
     } catch (error) {
@@ -128,7 +133,7 @@ export default function Login() {
           <TouchableOpacity
             style={[
               styles.loginButton,
-              !isLoginButtonEnabled && styles.loginButtonDisabled
+              !isLoginButtonEnabled && styles.loginButtonDisabled,
             ]}
             onPress={handleLogin}
             disabled={!isLoginButtonEnabled}
@@ -136,7 +141,7 @@ export default function Login() {
             <Text
               style={[
                 styles.loginButtonText,
-                !isLoginButtonEnabled && styles.loginButtonTextDisabled
+                !isLoginButtonEnabled && styles.loginButtonTextDisabled,
               ]}
             >
               로그인
@@ -158,33 +163,33 @@ export default function Login() {
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: "#fff"
+    backgroundColor: "#fff",
   },
   container: {
     flex: 1,
-    backgroundColor: "#fff"
+    backgroundColor: "#fff",
   },
   content: {
     flex: 1,
     padding: 24,
-    justifyContent: "center"
+    justifyContent: "center",
   },
   logoContainer: {
     alignItems: "center",
-    marginBottom: 60
+    marginBottom: 60,
   },
   logo: {
     width: 80,
-    height: 80
+    height: 80,
   },
   inputSection: {
-    marginBottom: 20
+    marginBottom: 20,
   },
   label: {
     fontSize: 14,
     color: "#222",
     marginBottom: 8,
-    fontWeight: "500"
+    fontWeight: "500",
   },
   input: {
     borderWidth: 1,
@@ -192,30 +197,30 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 12,
     fontSize: 14,
-    color: "#222222"
+    color: "#222222",
   },
   buttonWrapper: {
     padding: 24,
-    paddingBottom: Platform.OS === "ios" ? 34 : 24
+    paddingBottom: Platform.OS === "ios" ? 34 : 24,
   },
   loginButton: {
     backgroundColor: "#016A4C",
     paddingVertical: 15,
     borderRadius: 10,
     alignItems: "center",
-    marginBottom: 12
+    marginBottom: 12,
   },
   loginButtonDisabled: {
-    backgroundColor: "#CCCCCC"
+    backgroundColor: "#CCCCCC",
   },
   loginButtonText: {
     color: "#fff",
 
     fontSize: 16,
-    fontWeight: "600"
+    fontWeight: "600",
   },
   loginButtonTextDisabled: {
-    color: "#999999"
+    color: "#999999",
   },
   button: {
     backgroundColor: "#fff",
@@ -223,11 +228,11 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#016A4C"
+    borderColor: "#016A4C",
   },
   buttonText: {
     fontSize: 16,
     color: "#016A4C",
-    fontWeight: "600"
-  }
+    fontWeight: "600",
+  },
 });

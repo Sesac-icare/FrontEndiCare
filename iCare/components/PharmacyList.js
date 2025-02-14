@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -6,43 +6,71 @@ import {
   ScrollView,
   TouchableOpacity,
   SafeAreaView,
-  Image
+  Image,
+  ActivityIndicator
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 
 export default function PharmacyList() {
   const navigation = useNavigation();
-  const pharmacies = [
-    {
-      name: "참말로 친절한 약국",
-      status: "영업 중",
-      hours: "11:00 ~ 21:00",
-      distance: "1km",
-      address: "서울시 영등포구 경인로 841",
-      tel: "02-1234-5678"
-    },
-    {
-      name: "바른약국",
-      status: "영업 중",
-      hours: "11:00 ~ 21:00",
-      distance: "1km",
-      address: "서울 도봉구 도봉로 511 1층",
-      tel: "02-1234-5678"
-    },
-    {
-      name: "아이약국",
-      status: "영업 중",
-      hours: "11:00 ~ 21:00",
-      distance: "1km",
-      address: "서울 도봉구 도봉로 461 우림빌딩 1층",
-      tel: "02-1234-5678"
-    }
-  ];
+  const [pharmacies, setPharmacies] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchPharmacies = async () => {
+      try {
+        // API URL (자신의 백엔드 주소로 변경)
+        const response = await fetch("http://172.16.220.253:8000/pharmacy/pharmacies/");
+        if (!response.ok) {
+          throw new Error("네트워크 응답이 올바르지 않습니다.");
+        }
+        const data = await response.json();
+
+        // API가 반환하는 데이터는 한글 key로 되어 있습니다.
+        // 예: {"약국명": "참말로 친절한 약국", "영업 상태": "영업 중", "영업 시간": "11:00 ~ 21:00", "거리": "1km", "주소": "서울시 영등포구 경인로 841", "전화": "02-1234-5678"}
+        // 내부에서 UI 렌더링에 맞게 변환합니다.
+        const transformedData = data.map(item => ({
+          name: item["약국명"],
+          status: item["영업 상태"],
+          hours: item["영업 시간"],
+          distance: item["거리"],
+          address: item["주소"],
+          tel: item["전화"]
+        }));
+
+        setPharmacies(transformedData);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPharmacies();
+  }, []);
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.safe}>
+        <ActivityIndicator size="large" color="#016A4C" />
+      </SafeAreaView>
+    );
+  }
+
+  if (error) {
+    return (
+      <SafeAreaView style={styles.safe}>
+        <Text style={styles.errorText}>Error: {error}</Text>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.container}>
+        {/* 헤더 영역 */}
         <View style={styles.header}>
           <TouchableOpacity
             style={styles.backButton}
@@ -57,6 +85,7 @@ export default function PharmacyList() {
           />
         </View>
 
+        {/* 서브 헤더 영역 */}
         <View style={styles.subHeader}>
           <View style={styles.titleContainer}>
             <MaterialIcons name="location-on" size={24} color="#016A4C" />
@@ -72,6 +101,7 @@ export default function PharmacyList() {
           </TouchableOpacity>
         </View>
 
+        {/* 약국 목록 */}
         <ScrollView style={styles.listContainer}>
           {pharmacies.map((pharmacy, index) => (
             <TouchableOpacity key={index} style={styles.pharmacyItem}>

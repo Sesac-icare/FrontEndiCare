@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -6,43 +6,91 @@ import {
   ScrollView,
   TouchableOpacity,
   SafeAreaView,
-  Image
+  Image,
+  ActivityIndicator,
+  Alert
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import axios from "axios";
 
 export default function PharmacyList() {
   const navigation = useNavigation();
-  const pharmacies = [
-    {
-      name: "참말로 친절한 약국",
-      status: "영업 중",
-      hours: "11:00 ~ 21:00",
-      distance: "1km",
-      address: "서울시 영등포구 경인로 841",
-      tel: "02-1234-5678"
-    },
-    {
-      name: "바른약국",
-      status: "영업 중",
-      hours: "11:00 ~ 21:00",
-      distance: "1km",
-      address: "서울 도봉구 도봉로 511 1층",
-      tel: "02-1234-5678"
-    },
-    {
-      name: "아이약국",
-      status: "영업 중",
-      hours: "11:00 ~ 21:00",
-      distance: "1km",
-      address: "서울 도봉구 도봉로 461 우림빌딩 1층",
-      tel: "02-1234-5678"
+  const [pharmacies, setPharmacies] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [filterType, setFilterType] = useState("nearby"); // 'nearby' or 'open'
+
+  useEffect(() => {
+    fetchPharmacies();
+  }, [filterType]);
+
+  const fetchPharmacies = async () => {
+    try {
+      const userToken = await AsyncStorage.getItem("userToken");
+
+      if (!userToken) {
+        Alert.alert("오류", "로그인이 필요한 서비스입니다.");
+        navigation.reset({
+          index: 0,
+          routes: [{ name: "Login" }]
+        });
+        return;
+      }
+
+      const endpoint = filterType === "open" ? "open" : "nearby";
+      const response = await axios.get(
+        `http://172.16.217.175/pharmacy/${endpoint}/`,
+        {
+          headers: {
+            Authorization: `Token ${userToken}`
+          }
+        }
+      );
+
+      const transformedData = response.data.map((item) => ({
+        name: item["약국명"],
+        status: item["영업 상태"],
+        hours: item["영업 시간"],
+        distance: item["거리"],
+        address: item["주소"],
+        tel: item["전화"]
+      }));
+
+      setPharmacies(transformedData);
+    } catch (error) {
+      if (error.response?.status === 401) {
+        Alert.alert("오류", "로그인이 필요한 서비스입니다.");
+        navigation.reset({
+          index: 0,
+          routes: [{ name: "Login" }]
+        });
+      } else if (error.response?.status === 400) {
+        Alert.alert("오류", "위치 정보를 확인할 수 없습니다.");
+      } else {
+        Alert.alert("오류", "약국 정보를 불러오는데 실패했습니다.");
+      }
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
+
+  const toggleFilter = () => {
+    setFilterType((prev) => (prev === "nearby" ? "open" : "nearby"));
+  };
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.safe}>
+        <ActivityIndicator size="large" color="#016A4C" />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.container}>
+        {/* 헤더 영역 */}
         <View style={styles.header}>
           <TouchableOpacity
             style={styles.backButton}
@@ -57,13 +105,16 @@ export default function PharmacyList() {
           />
         </View>
 
+        {/* 서브 헤더 영역 */}
         <View style={styles.subHeader}>
           <View style={styles.titleContainer}>
             <MaterialIcons name="location-on" size={24} color="#016A4C" />
             <Text style={styles.pageTitle}>약국찾기</Text>
           </View>
-          <TouchableOpacity style={styles.filterButton}>
-            <Text style={styles.filterText}>가까운 순</Text>
+          <TouchableOpacity style={styles.filterButton} onPress={toggleFilter}>
+            <Text style={styles.filterText}>
+              {filterType === "nearby" ? "가까운 순" : "영업중"}
+            </Text>
             <MaterialIcons
               name="keyboard-arrow-down"
               size={24}
@@ -72,6 +123,7 @@ export default function PharmacyList() {
           </TouchableOpacity>
         </View>
 
+        {/* 약국 목록 */}
         <ScrollView style={styles.listContainer}>
           {pharmacies.map((pharmacy, index) => (
             <TouchableOpacity key={index} style={styles.pharmacyItem}>
@@ -79,7 +131,7 @@ export default function PharmacyList() {
               <Text style={styles.statusText}>
                 <Text
                   style={
-                    pharmacy.status === "영업 중"
+                    pharmacy.status === "영업중"
                       ? styles.openStatus
                       : styles.closedStatus
                   }

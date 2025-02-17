@@ -41,9 +41,18 @@ function MyPageStackScreen() {
     <MyPageStack.Navigator screenOptions={{ headerShown: false }}>
       <MyPageStack.Screen name="MyPageMain" component={MyPage} />
       <MyPageStack.Screen name="DocumentStorage" component={DocumentStorage} />
-      <MyPageStack.Screen name="PrescriptionDetail" component={PrescriptionDetail} />
-      <MyPageStack.Screen name="MedicationDetail" component={MedicationDetail} />
-      <MyPageStack.Screen name="RegisterPrescription" component={RegisterPrescription} />
+      <MyPageStack.Screen
+        name="PrescriptionDetail"
+        component={PrescriptionDetail}
+      />
+      <MyPageStack.Screen
+        name="MedicationDetail"
+        component={MedicationDetail}
+      />
+      <MyPageStack.Screen
+        name="RegisterPrescription"
+        component={RegisterPrescription}
+      />
     </MyPageStack.Navigator>
   );
 }

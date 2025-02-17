@@ -8,11 +8,13 @@ import {
   Image,
   TextInput,
   ScrollView,
-  Modal
+  Modal,
+  Button
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import axios from "axios";
+import * as Location from "expo-location";
 
 export default function SignUp() {
   const navigation = useNavigation();
@@ -25,49 +27,66 @@ export default function SignUp() {
   const [showConfirmIcon, setShowConfirmIcon] = useState(false);
   const [termAgreed, setTermAgreed] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
+  const [locationPermission, setLocationPermission] = useState(false);
+  const [userLocation, setUserLocation] = useState(null);
+  const [showLocationModal, setShowLocationModal] = useState(false);
 
-  const handleSignUp = () => {
-    if (!username || !email || !password || !passwordCheck) {
-      alert("모든 필드를 입력해주세요.");
-      return;
-    }
+  const handleSignUp = async () => {
+    try {
+      if (!username || !email || !password || !passwordCheck) {
+        alert("모든 필드를 입력해주세요.");
+        return;
+      }
 
-    if (passwordMismatch) {
-      alert("비밀번호가 일치하지 않습니다.");
-      return;
-    }
+      if (passwordMismatch) {
+        alert("비밀번호가 일치하지 않습니다.");
+        return;
+      }
 
-    if (!termAgreed) {
-      alert("고유식별정보 수집 및 이용에 동의해주세요.");
-      return;
-    }
+      if (!termAgreed) {
+        alert("고유식별정보 수집 및 이용에 동의해주세요.");
+        return;
+      }
 
-    const signUpData = {
-      username,
-      email,
-      password,
-      passwordCheck,
-      term_agreed: termAgreed
-    };
+      const signUpData = {
+        username,
+        email,
+        password,
+        passwordCheck,
+        term_agreed: termAgreed,
+        latitude: userLocation ? userLocation.coords.latitude : null,
+        longitude: userLocation ? userLocation.coords.longitude : null
+      };
 
-    axios
-      .post("http://172.16.217.175:8000/users/register/", signUpData)
-      .then((response) => {
-        const data = response.data;
-        if (data.email) {
-          alert("회원가입이 완료되었습니다. 로그인해주세요.");
-          navigation.navigate("Login");
+      console.log("회원가입 요청 데이터:", signUpData);
+
+      const response = await axios.post(
+        "http://172.16.217.175:8000/users/register/",
+        signUpData
+      );
+
+      // 응답 데이터 확인
+      console.log("회원가입 응답:", response.data);
+
+      // 회원가입 성공 조건 수정
+      if (response.status === 201 || response.status === 200) {
+        alert("회원가입이 완료되었습니다. 로그인해주세요.");
+        navigation.navigate("Login");
+      }
+    } catch (error) {
+      console.error("회원가입 실패:", error);
+      if (error.response?.status === 400) {
+        if (error.response.data.email) {
+          alert("이미 사용 중인 이메일입니다.");
+        } else if (error.response.data.password) {
+          alert("비밀번호가 일치하지 않습니다.");
+        } else {
+          alert(error.response.data.message || "회원가입에 실패했습니다.");
         }
-      })
-      .catch((error) => {
-        if (error.response?.status === 400) {
-          if (error.response.data.email) {
-            alert("이미 사용 중인 이메일입니다.");
-          } else if (error.response.data.password) {
-            alert("비밀번호가 일치하지 않습니다.");
-          }
-        }
-      });
+      } else {
+        alert("회원가입 중 오류가 발생했습니다.");
+      }
+    }
   };
 
   const handleAgree = () => {
@@ -85,6 +104,24 @@ export default function SignUp() {
   // 이메일 입력 핸들러 수정
   const handleEmailChange = (text) => {
     setEmail(text);
+  };
+
+  const requestLocationPermission = async () => {
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status === "granted") {
+        const location = await Location.getCurrentPositionAsync({});
+        console.log("사용자 위치 정보:", {
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude
+        });
+        setUserLocation(location);
+        setLocationPermission(true);
+        setShowLocationModal(false);
+      }
+    } catch (error) {
+      console.error("위치 권한 요청 실패:", error);
+    }
   };
 
   return (
@@ -191,6 +228,26 @@ export default function SignUp() {
                 </Text>
               </TouchableOpacity>
             </View>
+
+            <View style={styles.checkboxContainer}>
+              <TouchableOpacity
+                style={styles.checkbox}
+                onPress={() => setShowLocationModal(true)}
+              >
+                <MaterialIcons
+                  name={
+                    locationPermission ? "check-box" : "check-box-outline-blank"
+                  }
+                  size={24}
+                  color="#016A4C"
+                />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => setShowLocationModal(true)}>
+                <Text style={styles.checkboxLabel}>
+                  위치 정보 수집 및 이용에 동의합니다
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
 
           <TouchableOpacity style={styles.signUpButton} onPress={handleSignUp}>
@@ -284,6 +341,59 @@ export default function SignUp() {
                     setTermAgreed(true);
                     setShowTermsModal(false);
                   }}
+                >
+                  <Text style={styles.modalButtonTextConfirm}>동의하기</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
+
+        <Modal
+          visible={showLocationModal}
+          transparent={true}
+          animationType="slide"
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>
+                  위치 정보 수집 및 이용 동의
+                </Text>
+                <TouchableOpacity
+                  onPress={() => setShowLocationModal(false)}
+                  style={styles.closeButton}
+                >
+                  <MaterialIcons name="close" size={24} color="#666" />
+                </TouchableOpacity>
+              </View>
+              <ScrollView style={styles.modalBody}>
+                <View style={styles.modalSection}>
+                  <Text style={styles.modalSubTitle}>수집 및 이용 목적</Text>
+                  <Text style={styles.modalText}>
+                    • 사용자의 위치를 기반으로 한 서비스 제공
+                  </Text>
+                  <Text style={styles.modalText}>
+                    • 근처 의료 기관 정보 제공
+                  </Text>
+                </View>
+                <View style={styles.modalSection}>
+                  <Text style={styles.modalSubTitle}>
+                    수집하는 위치정보 항목
+                  </Text>
+                  <Text style={styles.modalText}>• 위도, 경도 정보</Text>
+                </View>
+              </ScrollView>
+              <View style={styles.modalFooter}>
+                <TouchableOpacity
+                  style={styles.modalButton}
+                  onPress={() => setShowLocationModal(false)}
+                >
+                  <Text style={styles.modalButtonTextCancel}>취소</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.modalButton, styles.modalButtonConfirm]}
+                  onPress={requestLocationPermission}
                 >
                   <Text style={styles.modalButtonTextConfirm}>동의하기</Text>
                 </TouchableOpacity>

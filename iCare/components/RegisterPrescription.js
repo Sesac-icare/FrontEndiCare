@@ -16,6 +16,7 @@ import * as ImagePicker from "expo-image-picker";
 import { Camera as ExpoCamera } from "expo-camera";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { manipulateAsync, SaveFormat } from "expo-image-manipulator";
 
 export default function RegisterPrescription() {
   const navigation = useNavigation();
@@ -55,8 +56,7 @@ export default function RegisterPrescription() {
   // 이미지 선택
   const pickImage = async () => {
     try {
-      const { status } =
-        await ImagePicker.requestMediaLibraryPermissionsAsync();
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== "granted") {
         alert("갤러리 접근 권한이 필요합니다.");
         return;
@@ -112,64 +112,102 @@ export default function RegisterPrescription() {
 
   // 등록하기
   const handleRegister = async () => {
-    if (!childName.trim()) {
-      setNameError(true);
-      alert("자녀 이름을 입력해주세요.");
-      return;
-    }
-
-    if (!image) {
-      alert("이미지를 선택해주세요.");
-      return;
-    }
-
     try {
-      // 로딩 표시
-      setScanning(true);
+      if (!childName.trim()) {
+        setNameError(true);
+        alert("자녀 이름을 입력해주세요.");
+        return;
+      }
 
-      const formData = new FormData();
+      if (!image) {
+        alert("이미지를 선택해주세요.");
+        return;
+      }
 
-      // 이미지 파일 추가
-      formData.append("image", {
-        uri: image,
-        name: "prescription.jpg",
-        type: "image/jpeg"
-      });
+      try {
+        setScanning(true);
 
-      formData.append("child_name", childName);
-
-      // 타임아웃 시간을 늘리고 재시도 로직 추가
-      const response = await axios.post(
-        "http://172.16.217.175:8000/prescriptions/ocr/",
-        formData,
-        {
-          headers: {
-            Authorization: `Token ${userToken}`,
-            "Content-Type": "multipart/form-data"
-          },
-          timeout: 30000, // 30초로 타임아웃 증가
-          maxContentLength: Infinity,
-          maxBodyLength: Infinity
-        }
-      );
-
-      if (response.data.message) {
-        Alert.alert("등록 성공", "처방전이 성공적으로 등록되었습니다.", [
-          {
-            text: "확인",
-            onPress: () => navigation.navigate("DocumentStorage")
+        // 이미지 최적화
+        const manipResult = await manipulateAsync(
+          image,
+          [
+            { resize: { width: 2048 } },  // 해상도 증가
+            { rotate: 0 }  // 회전 보정
+          ],
+          { 
+            compress: 0.9,  // 압축률 조정
+            format: SaveFormat.JPEG 
           }
-        ]);
+        );
+
+        const formData = new FormData();
+        formData.append("image", {
+          uri: manipResult.uri,
+          type: "image/jpeg",
+          name: "prescription.jpg"
+        });
+        formData.append("child_name", childName);
+
+        // 이미지 업로드 전 확인
+        Alert.alert(
+          "처방전 등록",
+          "이미지가 선명하고 처방전 전체가 잘 보이나요?",
+          [
+            {
+              text: "다시 촬영",
+              style: "cancel",
+              onPress: () => {
+                setScanning(false);
+                return;
+              }
+            },
+            {
+              text: "등록하기",
+              onPress: async () => {
+                try {
+                  const response = await axios.post(
+                    "http://172.16.217.175:8000/prescriptions/ocr/",
+                    formData,
+                    {
+                      headers: {
+                        Authorization: `Token ${userToken}`,
+                        "Content-Type": "multipart/form-data"
+                      },
+                      timeout: 60000
+                    }
+                  );
+
+                  if (response.data.message) {
+                    Alert.alert("등록 성공", "처방전이 성공적으로 등록되었습니다.", [
+                      {
+                        text: "확인",
+                        onPress: () => navigation.navigate("DocumentStorage")
+                      }
+                    ]);
+                  }
+                } catch (error) {
+                  if (error.response?.status === 400) {
+                    Alert.alert(
+                      "등록 실패",
+                      "처방전 이미지를 다시 촬영해주세요.\n\n촬영 팁:\n- 밝은 곳에서 촬영\n- 처방전 전체가 프레임 안에 들어오도록\n- 그림자나 빛 반사가 없도록\n- 처방전을 평평하게 펴서 촬영"
+                    );
+                  } else {
+                    Alert.alert(
+                      "오류",
+                      "서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요."
+                    );
+                  }
+                }
+              }
+            }
+          ]
+        );
+      } finally {
+        setScanning(false);
       }
     } catch (error) {
-      console.error("처방전 등록 에러:", error.response?.data || error.message);
-      Alert.alert(
-        "등록 실패",
-        "처방전 등록 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요."
-      );
-    } finally {
-      // 로딩 표시 제거
-      setScanning(false);
+      console.error("이미지 처리 오류:", error);
+      Alert.alert("오류", "이미지 처리 중 문제가 발생했습니다.");
     }
   };
 

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -9,40 +9,80 @@ import {
   TextInput,
   KeyboardAvoidingView,
   Platform,
-  ScrollView
+  ScrollView,
+  Button
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import axios from "axios";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Location from "expo-location";
 
 export default function Login() {
   const navigation = useNavigation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [userLocation, setUserLocation] = useState(null);
+
+  // 컴포넌트 마운트 시 위치 권한 요청
+  useEffect(() => {
+    (async () => {
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status === "granted") {
+          const location = await Location.getCurrentPositionAsync({});
+          setUserLocation(location);
+        }
+      } catch (error) {
+        console.error("위치 권한 요청 실패:", error);
+      }
+    })();
+  }, []);
 
   // 버튼 활성화 여부를 확인하는 함수
   const isLoginButtonEnabled = email.trim() !== "" && password.trim() !== "";
 
   const handleLogin = async () => {
-    if (!isLoginButtonEnabled) return;
-
     try {
+      if (!email || !password) {
+        alert("이메일과 비밀번호를 입력해주세요.");
+        return;
+      }
+
+      const loginData = {
+        email,
+        password
+      };
+
       const response = await axios.post(
         "http://172.16.217.175:8000/users/login/",
-        {
-          email,
-          password
-        },
-        {
-          headers: {
-            "Content-Type": "application/json"
+        loginData
+      );
+      const data = response.data;
+
+      if (data.token) {
+        // 자동으로 위치 정보 업데이트 시도
+        if (userLocation) {
+          try {
+            await axios.post(
+              "http://172.16.217.175:8000/users/update-location/",
+              {
+                latitude: userLocation.coords.latitude,
+                longitude: userLocation.coords.longitude
+              },
+              {
+                headers: {
+                  Authorization: `Token ${data.token}`
+                }
+              }
+            );
+          } catch (locationError) {
+            console.error("위치 정보 업데이트 실패:", locationError);
           }
         }
-      );
 
-      if (response.data.token) {
-        const { token, user } = response.data;
-        // TODO: 토큰을 안전하게 저장하는 로직 추가 (예: AsyncStorage)
+        await AsyncStorage.setItem("userToken", data.token);
+        await AsyncStorage.setItem("userInfo", JSON.stringify(data.user));
         navigation.navigate("MainTabs");
       }
     } catch (error) {
@@ -133,14 +173,7 @@ export default function Login() {
             onPress={handleLogin}
             disabled={!isLoginButtonEnabled}
           >
-            <Text
-              style={[
-                styles.loginButtonText,
-                !isLoginButtonEnabled && styles.loginButtonTextDisabled
-              ]}
-            >
-              로그인
-            </Text>
+            <Text style={styles.loginButtonText}>로그인</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -210,12 +243,8 @@ const styles = StyleSheet.create({
   },
   loginButtonText: {
     color: "#fff",
-
     fontSize: 16,
     fontWeight: "600"
-  },
-  loginButtonTextDisabled: {
-    color: "#999999"
   },
   button: {
     backgroundColor: "#fff",

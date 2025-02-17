@@ -9,7 +9,8 @@ import {
   ScrollView,
   Modal,
   Platform,
-  Alert
+  Alert,
+  FlatList
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
@@ -25,6 +26,7 @@ export default function DocumentStorage({ route }) {
   const [prescriptions, setPrescriptions] = useState([]);
   const [userToken, setUserToken] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [sortByDate, setSortByDate] = useState(false);
 
   useEffect(() => {
     const getToken = async () => {
@@ -40,12 +42,21 @@ export default function DocumentStorage({ route }) {
 
   const fetchPrescriptions = async () => {
     try {
+      // 토큰 유효성 확인
+      if (!userToken) {
+        Alert.alert("오류", "로그인이 필요합니다.");
+        navigation.navigate("Login");
+        return;
+      }
+
       const response = await axios.get(
-        "http://172.16.217.175:8000/prescriptions/list/",
+        "http://172.16.217.175:8000/prescriptions/list/",  // API 엔드포인트 확인
         {
           headers: {
-            Authorization: `Token ${userToken}`
-          }
+            Authorization: `Token ${userToken}`,
+            "Content-Type": "application/json"
+          },
+          timeout: 60000
         }
       );
 
@@ -67,10 +78,75 @@ export default function DocumentStorage({ route }) {
         setPrescriptions(formattedPrescriptions);
       }
     } catch (error) {
-      console.error("처방전 목록 가져오기 실패:", error);
-      Alert.alert("오류", "처방전 목록을 불러오는데 실패했습니다.");
+      if (error.response?.status === 400) {
+        console.error("서버 응답:", error.response.data);
+        Alert.alert("오류", "처방전 목록을 불러오는데 실패했습니다.\n잠시 후 다시 시도해주세요.");
+      } else if (error.response?.status === 401) {
+        Alert.alert("오류", "로그인이 만료되었습니다. 다시 로그인해주세요.");
+        await AsyncStorage.removeItem("userToken");
+        navigation.reset({
+          index: 0,
+          routes: [{ name: "Login" }]
+        });
+      } else {
+        Alert.alert("오류", "서버와의 통신 중 문제가 발생했습니다.");
+      }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchPrescriptionsByDate = async () => {
+    try {
+      const response = await axios.get(
+        "http://172.16.220.253:8000/prescriptions/by-date/",
+        {
+          headers: {
+            Authorization: `Token ${userToken}`,
+            "Content-Type": "application/json"
+          }
+        }
+      );
+
+      if (response.data.results) {
+        const formattedPrescriptions = response.data.results.map((item) => ({
+          documentId: item.envelope_id.toString(),
+          childName: item.child_name,
+          date: new Date(item.prescription_date)
+            .toLocaleDateString("ko-KR", {
+              year: "numeric",
+              month: "2-digit",
+              day: "2-digit"
+            })
+            .replace(/\. /g, "."),
+          pharmacyName: item.pharmacy_name,
+          prescriptionNumber: item.prescription_number
+        }));
+
+        setPrescriptions(formattedPrescriptions);
+        setSortByDate(true);
+      }
+    } catch (error) {
+      console.error("처방전 정렬 실패:", error);
+      if (error.response?.status === 401) {
+        Alert.alert("오류", "인증이 만료되었습니다. 다시 로그인해주세요.");
+        await AsyncStorage.removeItem("userToken");
+        navigation.reset({
+          index: 0,
+          routes: [{ name: "Login" }]
+        });
+      } else {
+        Alert.alert("오류", "처방전 목록을 불러오는데 실패했습니다.");
+      }
+    }
+  };
+
+  const handleSort = () => {
+    if (!sortByDate) {
+      fetchPrescriptionsByDate();
+    } else {
+      fetchPrescriptions();
+      setSortByDate(false);
     }
   };
 
@@ -91,15 +167,75 @@ export default function DocumentStorage({ route }) {
     setShowDeleteModal(true);
   };
 
-  const confirmDelete = () => {
-    setPrescriptions((prevPrescriptions) =>
-      prevPrescriptions.filter(
-        (p) => p.documentId !== selectedPrescription.documentId
-      )
-    );
-    setShowDeleteModal(false);
-    setSelectedPrescription(null);
+  const confirmDelete = async () => {
+    try {
+      // 삭제 API 호출
+      const response = await axios.delete(
+        `http://172.16.220.253:8000/prescriptions/prescriptions/${selectedPrescription.documentId}/`,
+        {
+          headers: {
+            Authorization: `Token ${userToken}`,
+            "Content-Type": "application/json"
+          }
+        }
+      );
+
+      if (response.status === 204) {
+        // 삭제 성공
+        Alert.alert("알림", "처방전이 삭제되었습니다.");
+        // 목록 새로고침을 위해 fetchPrescriptions 호출
+        await fetchPrescriptions();
+      }
+    } catch (error) {
+      console.error("처방전 삭제 실패:", error);
+      if (error.response?.status === 401) {
+        Alert.alert("오류", "인증이 만료되었습니다. 다시 로그인해주세요.");
+        await AsyncStorage.removeItem("userToken");
+        navigation.reset({
+          index: 0,
+          routes: [{ name: "Login" }]
+        });
+      } else {
+        Alert.alert("오류", "처방전 삭제에 실패했습니다.");
+      }
+    } finally {
+      setShowDeleteModal(false);
+      setSelectedPrescription(null);
+    }
   };
+
+  const renderItem = ({ item }) => (
+    <TouchableOpacity
+      key={item.documentId}
+      style={styles.prescriptionItem}
+      onPress={() =>
+        navigation.navigate("PrescriptionDetail", { prescription: item })
+      }
+    >
+      <View style={styles.itemContent}>
+        <View style={styles.nameTag}>
+          <Text style={styles.childName}>{item.childName}</Text>
+        </View>
+        <Text style={styles.date}>{item.date}</Text>
+        <Text style={styles.pharmacyName}>{item.pharmacyName}</Text>
+        <Text style={styles.documentId}>교부번호: {item.documentId}</Text>
+      </View>
+      <View style={styles.itemActions}>
+        <MaterialIcons
+          name="chevron-right"
+          size={24}
+          color="#CCCCCC"
+          style={styles.chevron}
+        />
+        <TouchableOpacity
+          style={styles.deleteButton}
+          onPress={() => handleDelete(item)}
+        >
+          <MaterialIcons name="delete-outline" size={24} color="#FF4444" />
+        </TouchableOpacity>
+      </View>
+    </TouchableOpacity>
+  );
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -125,18 +261,32 @@ export default function DocumentStorage({ route }) {
               (총 {prescriptions.length}개)
             </Text>
           </View>
-          <TouchableOpacity style={styles.filterButton}>
-            <Text style={styles.filterText}>최신순</Text>
+          <TouchableOpacity
+            style={[
+              styles.filterButton,
+              sortByDate && styles.filterButtonActive
+            ]}
+            onPress={handleSort}
+          >
+            <Text
+              style={[styles.filterText, sortByDate && styles.filterTextActive]}
+            >
+              {sortByDate ? "기본순" : "최신순"}
+            </Text>
             <MaterialIcons
               name="keyboard-arrow-down"
               size={24}
-              color="#666666"
+              color={sortByDate ? "#016A4C" : "#666666"}
             />
           </TouchableOpacity>
         </View>
 
         <ScrollView style={styles.content}>
-          {prescriptions.length === 0 ? (
+          {loading ? (
+            <View style={styles.centerContainer}>
+              <Text>로딩 중...</Text>
+            </View>
+          ) : prescriptions.length === 0 ? (
             <View style={styles.emptyContainer}>
               <View style={styles.iconContainer}>
                 <MaterialIcons name="description" size={80} color="#CCCCCC" />
@@ -148,48 +298,12 @@ export default function DocumentStorage({ route }) {
               <Text style={styles.subText}>채팅으로도 등록할 수 있습니다.</Text>
             </View>
           ) : (
-            prescriptions.map((prescription) => (
-              <TouchableOpacity
-                key={prescription.documentId}
-                style={styles.prescriptionItem}
-                onPress={() =>
-                  navigation.navigate("PrescriptionDetail", { prescription })
-                }
-              >
-                <View style={styles.itemContent}>
-                  <View style={styles.nameTag}>
-                    <Text style={styles.childName}>
-                      {prescription.childName}
-                    </Text>
-                  </View>
-                  <Text style={styles.date}>{prescription.date}</Text>
-                  <Text style={styles.pharmacyName}>
-                    {prescription.pharmacyName}
-                  </Text>
-                  <Text style={styles.documentId}>
-                    교부번호: {prescription.documentId}
-                  </Text>
-                </View>
-                <View style={styles.itemActions}>
-                  <MaterialIcons
-                    name="chevron-right"
-                    size={24}
-                    color="#CCCCCC"
-                    style={styles.chevron}
-                  />
-                  <TouchableOpacity
-                    style={styles.deleteButton}
-                    onPress={() => handleDelete(prescription)}
-                  >
-                    <MaterialIcons
-                      name="delete-outline"
-                      size={24}
-                      color="#FF4444"
-                    />
-                  </TouchableOpacity>
-                </View>
-              </TouchableOpacity>
-            ))
+            <FlatList
+              data={prescriptions}
+              renderItem={renderItem}
+              keyExtractor={(item) => item.documentId}
+              contentContainerStyle={styles.listContainer}
+            />
           )}
         </ScrollView>
 

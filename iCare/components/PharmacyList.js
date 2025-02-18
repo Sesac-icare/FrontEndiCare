@@ -20,6 +20,7 @@ export default function PharmacyList() {
   const [pharmacies, setPharmacies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filterType, setFilterType] = useState("nearby"); // 'nearby' or 'open'
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     fetchPharmacies();
@@ -27,6 +28,8 @@ export default function PharmacyList() {
 
   const fetchPharmacies = async () => {
     try {
+      setLoading(true);
+      setError(null);
       const userToken = await AsyncStorage.getItem("userToken");
 
       if (!userToken) {
@@ -44,7 +47,8 @@ export default function PharmacyList() {
         {
           headers: {
             Authorization: `Token ${userToken}`
-          }
+          },
+          timeout: 10000 // 10초 타임아웃 설정
         }
       );
 
@@ -59,16 +63,32 @@ export default function PharmacyList() {
 
       setPharmacies(transformedData);
     } catch (error) {
-      if (error.response?.status === 401) {
+      console.error("약국 목록 가져오기 실패:", error);
+
+      if (error.code === "ECONNABORTED") {
+        setError("서버 응답 시간이 초과되었습니다.");
+        Alert.alert(
+          "연결 실패",
+          "서버 응답이 지연되고 있습니다.\n잠시 후 다시 시도해주세요."
+        );
+      } else if (error.response?.status === 401) {
         Alert.alert("오류", "로그인이 필요한 서비스입니다.");
         navigation.reset({
           index: 0,
           routes: [{ name: "Login" }]
         });
       } else if (error.response?.status === 400) {
-        Alert.alert("오류", "위치 정보를 확인할 수 없습니다.");
+        setError("위치 정보를 확인할 수 없습니다.");
+        Alert.alert(
+          "위치 확인 실패",
+          "위치 정보를 확인할 수 없습니다.\n위치 서비스를 켜고 다시 시도해주세요."
+        );
       } else {
-        Alert.alert("오류", "약국 정보를 불러오는데 실패했습니다.");
+        setError("약국 정보를 불러올 수 없습니다.");
+        Alert.alert(
+          "데이터 로드 실패",
+          "약국 정보를 불러오는데 실패했습니다.\n네트워크 연결을 확인하고 다시 시도해주세요."
+        );
       }
     } finally {
       setLoading(false);
@@ -123,50 +143,66 @@ export default function PharmacyList() {
           </TouchableOpacity>
         </View>
 
-        {/* 약국 목록 */}
-        <ScrollView
-          style={styles.listContainer}
-          showsVerticalScrollIndicator={false}
-        >
-          {pharmacies.map((pharmacy, index) => (
-            <TouchableOpacity key={index} style={styles.pharmacyItem}>
-              <Text style={styles.pharmacyName}>{pharmacy.name}</Text>
-              <Text style={styles.statusText}>
-                <Text
-                  style={
-                    pharmacy.status === "영업중"
-                      ? styles.openStatus
-                      : styles.closedStatus
-                  }
-                >
-                  {pharmacy.status}
-                </Text>
-                <Text style={styles.statusDivider}> | </Text>
-                {pharmacy.hours}
-                <Text style={styles.statusDivider}> | </Text>
-                {pharmacy.distance}
-              </Text>
-              <View style={styles.addressContainer}>
-                <MaterialIcons
-                  name="location-on"
-                  size={18}
-                  color="#666"
-                  style={styles.addressIcon}
-                />
-                <Text style={styles.addressText}>{pharmacy.address}</Text>
-              </View>
-              <View style={styles.telContainer}>
-                <MaterialIcons
-                  name="phone"
-                  size={18}
-                  color="#016A4C"
-                  style={styles.telIcon}
-                />
-                <Text style={styles.telText}>{pharmacy.tel}</Text>
-              </View>
+        {loading ? (
+          <View style={styles.centerContainer}>
+            <ActivityIndicator size="large" color="#016A4C" />
+          </View>
+        ) : error ? (
+          <View style={styles.errorContainer}>
+            <MaterialIcons name="error-outline" size={48} color="#E53935" />
+            <Text style={styles.errorText}>{error}</Text>
+            <TouchableOpacity
+              style={styles.retryButton}
+              onPress={fetchPharmacies}
+            >
+              <Text style={styles.retryButtonText}>다시 시도</Text>
             </TouchableOpacity>
-          ))}
-        </ScrollView>
+          </View>
+        ) : (
+          <ScrollView
+            style={styles.listContainer}
+            showsVerticalScrollIndicator={false}
+          >
+            {pharmacies.map((pharmacy, index) => (
+              <TouchableOpacity key={index} style={styles.pharmacyItem}>
+                <Text style={styles.pharmacyName}>{pharmacy.name}</Text>
+                <Text style={styles.statusText}>
+                  <Text
+                    style={
+                      pharmacy.status === "영업중"
+                        ? styles.openStatus
+                        : styles.closedStatus
+                    }
+                  >
+                    {pharmacy.status}
+                  </Text>
+                  <Text style={styles.statusDivider}> | </Text>
+                  {pharmacy.hours}
+                  <Text style={styles.statusDivider}> | </Text>
+                  {pharmacy.distance}
+                </Text>
+                <View style={styles.addressContainer}>
+                  <MaterialIcons
+                    name="location-on"
+                    size={18}
+                    color="#666"
+                    style={styles.addressIcon}
+                  />
+                  <Text style={styles.addressText}>{pharmacy.address}</Text>
+                </View>
+                <View style={styles.telContainer}>
+                  <MaterialIcons
+                    name="phone"
+                    size={18}
+                    color="#016A4C"
+                    style={styles.telIcon}
+                  />
+                  <Text style={styles.telText}>{pharmacy.tel}</Text>
+                </View>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        )}
       </View>
     </SafeAreaView>
   );
@@ -302,5 +338,37 @@ const styles = StyleSheet.create({
   },
   statusDivider: {
     color: "#CCCCCC"
+  },
+  centerContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#f9fafb"
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+    backgroundColor: "#f9fafb"
+  },
+  errorText: {
+    fontSize: 16,
+    color: "#666",
+    textAlign: "center",
+    marginTop: 16,
+    marginBottom: 24,
+    lineHeight: 24
+  },
+  retryButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    backgroundColor: "#016A4C",
+    borderRadius: 8
+  },
+  retryButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600"
   }
 });

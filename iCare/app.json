@@ -27,7 +27,13 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "plugins": ["expo-font"],
-    "assetBundlePatterns": ["**/*", "assets/*"]
+    "plugins": [
+      "expo-font",
+      "expo-speech-recognition"
+    ],
+    "assetBundlePatterns": [
+      "**/*",
+      "assets/*"
+    ]
   }
 }

@@ -56,19 +56,16 @@ export default function Login() {
 
       const response = await axios.post(
         "http://172.16.217.175:8000/users/login/",
-        loginData,
-        {
-          timeout: 30000
-        }
+        loginData
       );
-
       const data = response.data;
 
       if (data.token) {
+        // 자동으로 위치 정보 업데이트 시도
         if (userLocation) {
           try {
             await axios.post(
-              "http://:8000/users/update-location/",
+              "http://172.16.217.175:8000/users/update-location/",
               {
                 latitude: userLocation.coords.latitude,
                 longitude: userLocation.coords.longitude
@@ -89,25 +86,40 @@ export default function Login() {
         navigation.navigate("MainTabs");
       }
     } catch (error) {
-      console.error("Login error:", error.response?.data || error.message);
+      console.error("Login error:", error.response?.data);
 
-      if (error.code === "ECONNABORTED") {
-        alert("서버 응답이 지연되고 있습니다.\n잠시 후 다시 시도해주세요.");
-        return;
-      }
-
-      if (error.response?.data?.error) {
-        if (
-          error.response.data.error.includes(
-            "User with this email does not exist"
-          )
-        ) {
-          alert("등록되지 않은 이메일입니다.\n회원가입을 먼저 진행해주세요.");
-          return;
+      if (error.response) {
+        // 서버가 응답한 구체적인 에러 메시지가 있는 경우
+        if (error.response.data.error) {
+          // "User with this email does not exist" 에러 처리
+          if (
+            error.response.data.error.includes(
+              "User with this email does not exist"
+            )
+          ) {
+            alert("등록되지 않은 이메일입니다.\n회원가입을 먼저 진행해주세요.");
+            return;
+          }
         }
-      }
 
-      alert("로그인에 실패했습니다. 이메일과 비밀번호를 확인해주세요.");
+        if (error.response.data.email) {
+          alert(error.response.data.email[0]);
+        } else if (error.response.data.password) {
+          alert(error.response.data.password[0]);
+        } else if (error.response.data.non_field_errors) {
+          alert(error.response.data.non_field_errors[0]);
+        } else if (error.response.status === 400) {
+          alert("이메일 또는 비밀번호가 올바르지 않습니다.");
+        } else {
+          alert("로그인에 실패했습니다. 다시 시도해주세요.");
+        }
+      } else if (error.request) {
+        // 요청은 보냈지만 응답을 받지 못한 경우
+        alert("서버와 통신할 수 없습니다. 인터넷 연결을 확인해주세요.");
+      } else {
+        // 요청 설정 중 에러가 발생한 경우
+        alert("로그인 중 오류가 발생했습니다.");
+      }
     }
   };
 

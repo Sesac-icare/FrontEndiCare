@@ -124,7 +124,10 @@ export default function PharmacyList() {
         </View>
 
         {/* 약국 목록 */}
-        <ScrollView style={styles.listContainer}>
+        <ScrollView
+          style={styles.listContainer}
+          showsVerticalScrollIndicator={false}
+        >
           {pharmacies.map((pharmacy, index) => (
             <TouchableOpacity key={index} style={styles.pharmacyItem}>
               <Text style={styles.pharmacyName}>{pharmacy.name}</Text>
@@ -144,12 +147,22 @@ export default function PharmacyList() {
                 {pharmacy.distance}
               </Text>
               <View style={styles.addressContainer}>
-                <MaterialIcons name="location-on" size={16} color="#666" />
-                <Text style={styles.addressText}>주소: {pharmacy.address}</Text>
+                <MaterialIcons
+                  name="location-on"
+                  size={18}
+                  color="#666"
+                  style={styles.addressIcon}
+                />
+                <Text style={styles.addressText}>{pharmacy.address}</Text>
               </View>
               <View style={styles.telContainer}>
-                <MaterialIcons name="phone" size={16} color="#666" />
-                <Text style={styles.telText}>전화: {pharmacy.tel}</Text>
+                <MaterialIcons
+                  name="phone"
+                  size={18}
+                  color="#016A4C"
+                  style={styles.telIcon}
+                />
+                <Text style={styles.telText}>{pharmacy.tel}</Text>
               </View>
             </TouchableOpacity>
           ))}
@@ -248,22 +261,36 @@ const styles = StyleSheet.create({
   },
   addressContainer: {
     flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    marginBottom: 8
+    alignItems: "flex-start",
+    marginBottom: 8,
+    paddingRight: 16
+  },
+  addressIcon: {
+    marginTop: 2,
+    marginRight: 4
+  },
+  addressText: {
+    flex: 1,
+    fontSize: 14,
+    color: "#666",
+    lineHeight: 20
   },
   telContainer: {
     flexDirection: "row",
-    alignItems: "center",
-    gap: 4
+    alignItems: "flex-start",
+    marginTop: 4,
+    paddingRight: 16
   },
-  addressText: {
-    color: "#666",
-    fontSize: 14
+  telIcon: {
+    marginTop: 2,
+    marginRight: 6
   },
   telText: {
-    color: "#666",
-    fontSize: 14
+    flex: 1,
+    fontSize: 14,
+    color: "#016A4C",
+    fontWeight: "500",
+    lineHeight: 20
   },
   openStatus: {
     color: "#016A4C",

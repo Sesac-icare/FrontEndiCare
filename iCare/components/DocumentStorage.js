@@ -42,64 +42,8 @@ export default function DocumentStorage({ route }) {
 
   const fetchPrescriptions = async () => {
     try {
-      // 토큰 유효성 확인
-      if (!userToken) {
-        Alert.alert("오류", "로그인이 필요합니다.");
-        navigation.navigate("Login");
-        return;
-      }
-
       const response = await axios.get(
-        "http://172.16.217.175:8000/prescriptions/list/",  // API 엔드포인트 확인
-        {
-          headers: {
-            Authorization: `Token ${userToken}`,
-            "Content-Type": "application/json"
-          },
-          timeout: 60000
-        }
-      );
-
-      if (response.data.results) {
-        const formattedPrescriptions = response.data.results.map((item) => ({
-          documentId: item.envelope_id.toString(),
-          childName: item.child_name,
-          date: new Date(item.prescription_date)
-            .toLocaleDateString("ko-KR", {
-              year: "numeric",
-              month: "2-digit",
-              day: "2-digit"
-            })
-            .replace(/\. /g, "."),
-          pharmacyName: item.pharmacy_name,
-          prescriptionNumber: item.prescription_number
-        }));
-
-        setPrescriptions(formattedPrescriptions);
-      }
-    } catch (error) {
-      if (error.response?.status === 400) {
-        console.error("서버 응답:", error.response.data);
-        Alert.alert("오류", "처방전 목록을 불러오는데 실패했습니다.\n잠시 후 다시 시도해주세요.");
-      } else if (error.response?.status === 401) {
-        Alert.alert("오류", "로그인이 만료되었습니다. 다시 로그인해주세요.");
-        await AsyncStorage.removeItem("userToken");
-        navigation.reset({
-          index: 0,
-          routes: [{ name: "Login" }]
-        });
-      } else {
-        Alert.alert("오류", "서버와의 통신 중 문제가 발생했습니다.");
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchPrescriptionsByDate = async () => {
-    try {
-      const response = await axios.get(
-        "http://172.16.220.253:8000/prescriptions/by-date/",
+        "http://172.16.217.175:8000/prescriptions/list/",
         {
           headers: {
             Authorization: `Token ${userToken}`,
@@ -110,7 +54,8 @@ export default function DocumentStorage({ route }) {
 
       if (response.data.results) {
         const formattedPrescriptions = response.data.results.map((item) => ({
-          documentId: item.envelope_id.toString(),
+          documentId: item.prescription_number,
+          prescriptionId: item.prescription_id,
           childName: item.child_name,
           date: new Date(item.prescription_date)
             .toLocaleDateString("ko-KR", {
@@ -120,7 +65,62 @@ export default function DocumentStorage({ route }) {
             })
             .replace(/\. /g, "."),
           pharmacyName: item.pharmacy_name,
-          prescriptionNumber: item.prescription_number
+          pharmacyAddress: item.pharmacy_address,
+          totalAmount: item.total_amount,
+          duration: item.duration,
+          endDate: item.end_date,
+          createdAt: new Date(item.created_at)
+        }));
+
+        setPrescriptions(formattedPrescriptions);
+      }
+    } catch (error) {
+      console.error("처방전 목록 가져오기 실패:", error);
+      if (error.response?.status === 401) {
+        Alert.alert("오류", "인증이 만료되었습니다. 다시 로그인해주세요.");
+        await AsyncStorage.removeItem("userToken");
+        navigation.reset({
+          index: 0,
+          routes: [{ name: "Login" }]
+        });
+      } else {
+        Alert.alert("오류", "처방전 목록을 불러오는데 실패했습니다.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchPrescriptionsByDate = async () => {
+    try {
+      const response = await axios.get(
+        "http://192.168.0.18:8000/prescriptions/by-date/",
+        {
+          headers: {
+            Authorization: `Token ${userToken}`,
+            "Content-Type": "application/json"
+          }
+        }
+      );
+
+      if (response.data.results) {
+        const formattedPrescriptions = response.data.results.map((item) => ({
+          documentId: item.prescription_number,
+          prescriptionId: item.prescription_id,
+          childName: item.child_name,
+          date: new Date(item.prescription_date)
+            .toLocaleDateString("ko-KR", {
+              year: "numeric",
+              month: "2-digit",
+              day: "2-digit"
+            })
+            .replace(/\. /g, "."),
+          pharmacyName: item.pharmacy_name,
+          pharmacyAddress: item.pharmacy_address,
+          totalAmount: item.total_amount,
+          duration: item.duration,
+          endDate: item.end_date,
+          createdAt: new Date(item.created_at)
         }));
 
         setPrescriptions(formattedPrescriptions);
@@ -163,15 +163,20 @@ export default function DocumentStorage({ route }) {
   }, [route.params?.newPrescription]);
 
   const handleDelete = (prescription) => {
+    console.log("삭제할 처방전 ID:", prescription.prescriptionId);
     setSelectedPrescription(prescription);
     setShowDeleteModal(true);
   };
 
   const confirmDelete = async () => {
     try {
-      // 삭제 API 호출
+      if (!selectedPrescription?.prescriptionId) {
+        Alert.alert("오류", "처방전 ID를 찾을 수 없습니다.");
+        return;
+      }
+
       const response = await axios.delete(
-        `http://172.16.220.253:8000/prescriptions/prescriptions/${selectedPrescription.documentId}/`,
+        `http://192.168.0.18:8000/prescriptions/${selectedPrescription.prescriptionId}/`,
         {
           headers: {
             Authorization: `Token ${userToken}`,
@@ -180,14 +185,15 @@ export default function DocumentStorage({ route }) {
         }
       );
 
-      if (response.status === 204) {
-        // 삭제 성공
-        Alert.alert("알림", "처방전이 삭제되었습니다.");
-        // 목록 새로고침을 위해 fetchPrescriptions 호출
+      if (response.status === 204 || response.status === 200) {
+        setShowDeleteModal(false);
+        setSelectedPrescription(null);
+        setSortByDate(false);
         await fetchPrescriptions();
+        Alert.alert("알림", "처방전이 삭제되었습니다.");
       }
     } catch (error) {
-      console.error("처방전 삭제 실패:", error);
+      console.error("처방전 삭제 실패:", error.response || error);
       if (error.response?.status === 401) {
         Alert.alert("오류", "인증이 만료되었습니다. 다시 로그인해주세요.");
         await AsyncStorage.removeItem("userToken");
@@ -198,7 +204,6 @@ export default function DocumentStorage({ route }) {
       } else {
         Alert.alert("오류", "처방전 삭제에 실패했습니다.");
       }
-    } finally {
       setShowDeleteModal(false);
       setSelectedPrescription(null);
     }
@@ -209,7 +214,9 @@ export default function DocumentStorage({ route }) {
       key={item.documentId}
       style={styles.prescriptionItem}
       onPress={() =>
-        navigation.navigate("PrescriptionDetail", { prescription: item })
+        navigation.navigate("PrescriptionDetail", {
+          prescriptionId: item.prescriptionId
+        })
       }
     >
       <View style={styles.itemContent}>
@@ -218,7 +225,11 @@ export default function DocumentStorage({ route }) {
         </View>
         <Text style={styles.date}>{item.date}</Text>
         <Text style={styles.pharmacyName}>{item.pharmacyName}</Text>
-        <Text style={styles.documentId}>교부번호: {item.documentId}</Text>
+        <Text style={styles.duration}>
+          {item.duration
+            ? `${item.duration}일 | ${item.endDate} 까지`
+            : item.endDate}
+        </Text>
       </View>
       <View style={styles.itemActions}>
         <MaterialIcons
@@ -281,33 +292,30 @@ export default function DocumentStorage({ route }) {
           </TouchableOpacity>
         </View>
 
-        <ScrollView style={styles.content}>
-          {loading ? (
-            <View style={styles.centerContainer}>
-              <Text>로딩 중...</Text>
+        {loading ? (
+          <View style={styles.centerContainer}>
+            <Text>로딩 중...</Text>
+          </View>
+        ) : prescriptions.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            <View style={styles.iconContainer}>
+              <MaterialIcons name="description" size={80} color="#CCCCCC" />
             </View>
-          ) : prescriptions.length === 0 ? (
-            <View style={styles.emptyContainer}>
-              <View style={styles.iconContainer}>
-                <MaterialIcons name="description" size={80} color="#CCCCCC" />
-              </View>
-              <Text style={styles.emptyText}>
-                약국봉투를 등록하고{"\n"}
-                처방전을 관리해보세요
-              </Text>
-              <Text style={styles.subText}>채팅으로도 등록할 수 있습니다.</Text>
-            </View>
-          ) : (
-            <FlatList
-              data={prescriptions}
-              renderItem={renderItem}
-              keyExtractor={(item) => item.documentId}
-              contentContainerStyle={styles.listContainer}
-            />
-          )}
-        </ScrollView>
+            <Text style={styles.emptyText}>
+              약국봉투를 등록하고{"\n"}
+              처방전을 관리해보세요
+            </Text>
+            <Text style={styles.subText}>채팅으로도 등록할 수 있습니다.</Text>
+          </View>
+        ) : (
+          <FlatList
+            data={prescriptions}
+            renderItem={renderItem}
+            keyExtractor={(item) => item.documentId}
+            contentContainerStyle={[styles.content, { paddingBottom: 80 }]}
+          />
+        )}
 
-        {/* 하단에 고정된 버튼 */}
         <View style={styles.bottomButtonContainer}>
           <TouchableOpacity
             style={styles.addButton}
@@ -318,7 +326,6 @@ export default function DocumentStorage({ route }) {
           </TouchableOpacity>
         </View>
 
-        {/* 이미지 보기 모달 */}
         <Modal
           visible={showImageModal}
           transparent={true}
@@ -342,7 +349,6 @@ export default function DocumentStorage({ route }) {
           </View>
         </Modal>
 
-        {/* 삭제 확인 모달 */}
         <Modal
           visible={showDeleteModal}
           transparent={true}
@@ -559,7 +565,7 @@ const styles = StyleSheet.create({
     color: "#016A4C",
     marginBottom: 6
   },
-  documentId: {
+  duration: {
     fontSize: 14,
     color: "#666"
   },

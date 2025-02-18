@@ -40,7 +40,7 @@ export default function PharmacyList() {
 
       const endpoint = filterType === "open" ? "open" : "nearby";
       const response = await axios.get(
-        `http://172.16.217.175/pharmacy/${endpoint}/`,
+        `http://172.16.217.175:8000/pharmacy/${endpoint}/`,
         {
           headers: {
             Authorization: `Token ${userToken}`

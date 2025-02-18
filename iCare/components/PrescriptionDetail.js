@@ -1,85 +1,4 @@
-// import React, { useState, useEffect } from "react";
-// import {
-//   View,
-//   Text,
-//   StyleSheet,
-//   SafeAreaView,
-//   TouchableOpacity,
-//   ScrollView,
-//   Image
-// } from "react-native";
-// import { MaterialIcons } from "@expo/vector-icons";
-// import { useNavigation } from "@react-navigation/native";
-
-// export default function PrescriptionDetail({ route }) {
-//   const navigation = useNavigation();
-//   const { prescription } = route.params;
-//   const [medications, setMedications] = useState([
-//     {
-//       name: "리포직점안겔",
-//       dosage: "1개, 1회, 1일",
-//       details: "..."
-//     },
-//     {
-//       name: "타이레놀정 500mg",
-//       dosage: "2개, 3회, 3일",
-//       details: "..."
-//     },
-//     {
-//       name: "판콜에이내복액",
-//       dosage: "1개, 2회, 5일",
-//       details: "..."
-//     }
-//   ]);
-
-//   return (
-//     <SafeAreaView style={styles.safe}>
-//       <View style={styles.container}>
-//         <View style={styles.header}>
-//           <TouchableOpacity
-//             style={styles.backButton}
-//             onPress={() => navigation.goBack()}
-//           >
-//             <MaterialIcons name="chevron-left" size={32} color="#CCCCCC" />
-//           </TouchableOpacity>
-//           <Text style={styles.headerTitle}>조제 약 정보</Text>
-//         </View>
-
-//         <ScrollView style={styles.content}>
-//           <View style={styles.infoCard}>
-//             <View style={styles.nameTag}>
-//               <Text style={styles.nameText}>{prescription.childName}</Text>
-//             </View>
-            
-//             <Text style={styles.pharmacyName}>{prescription.pharmacyName}</Text>
-//             <Text style={styles.address}>약국 위치: {prescription.address}</Text>
-//             <Text style={styles.date}>발행일: {prescription.date}</Text>
-//             <Text style={styles.price}>총수납금액 합계: {prescription.price}원</Text>
-//           </View>
-
-//           <View style={styles.medicationList}>
-//             {medications.map((med, index) => (
-//               <View key={index} style={styles.medicationItem}>
-//                 <View style={styles.medHeader}>
-//                   <Text style={styles.medName}>{med.name}</Text>
-//                   <TouchableOpacity 
-//                     style={styles.infoButton}
-//                     onPress={() => navigation.navigate("MedicationDetail", { medicationName: med.name })}
-//                   >
-//                     <Text style={styles.infoButtonText}>정보 보기</Text>
-//                   </TouchableOpacity>
-//                 </View>
-//                 <Text style={styles.dosage}>{med.dosage}</Text>
-//               </View>
-//             ))}
-//           </View>
-//         </ScrollView>
-//       </View>
-//     </SafeAreaView>
-//   );
-// }
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -87,36 +6,87 @@ import {
   SafeAreaView,
   TouchableOpacity,
   ScrollView,
-  Image
+  Image,
+  Alert
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import axios from "axios";
 
 export default function PrescriptionDetail({ route }) {
   const navigation = useNavigation();
-  const { prescription } = route.params;
-  const [medications, setMedications] = useState([
-    {
-      name: "리포직점안겔",
-      dosage: "1개, 1회, 1일",
-      details: "..."
-    },
-    {
-      name: "타이레놀정 500mg",
-      dosage: "2개, 3회, 3일",
-      details: "..."
-    },
-    {
-      name: "판콜에이내복액",
-      dosage: "1개, 2회, 5일",
-      details: "..."
-    }
-  ]);
+  const { prescriptionId } = route.params;
+  const [prescription, setPrescription] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // 버튼 클릭 시 API 호출 후 MedicationDetail 화면으로 이동하는 함수
+  useEffect(() => {
+    fetchPrescriptionDetail();
+  }, [prescriptionId]);
+
+  const fetchPrescriptionDetail = async () => {
+    try {
+      const userToken = await AsyncStorage.getItem("userToken");
+      if (!userToken) {
+        Alert.alert("오류", "로그인이 필요합니다.");
+        navigation.reset({
+          index: 0,
+          routes: [{ name: "Login" }]
+        });
+        return;
+      }
+
+      const response = await axios.get(
+        `http://192.168.0.18:8000/prescriptions/detail/${prescriptionId}/`,
+        {
+          headers: {
+            Authorization: `Token ${userToken}`,
+            "Content-Type": "application/json"
+          }
+        }
+      );
+
+      if (response.data.success && response.data.data) {
+        const { data } = response.data;
+        setPrescription({
+          childName: data.child_name,
+          pharmacyName: data.pharmacy_info.name,
+          address: data.pharmacy_info.address,
+          date: new Date(data.prescription_date)
+            .toLocaleDateString("ko-KR", {
+              year: "numeric",
+              month: "2-digit",
+              day: "2-digit"
+            })
+            .replace(/\. /g, "."),
+          price: data.total_amount,
+          medicines: data.medicines.map((med) => ({
+            name: med.name,
+            dosage: `${med.dosage}정, ${med.frequency}회, ${med.duration}일`,
+            details: "..."
+          }))
+        });
+      }
+    } catch (error) {
+      console.error("처방전 상세 정보 가져오기 실패:", error);
+      if (error.response?.status === 401) {
+        Alert.alert("오류", "인증이 만료되었습니다. 다시 로그인해주세요.");
+        await AsyncStorage.removeItem("userToken");
+        navigation.reset({
+          index: 0,
+          routes: [{ name: "Login" }]
+        });
+      } else {
+        Alert.alert("오류", "처방전 정보를 불러오는데 실패했습니다.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleInfoPress = async (medName) => {
     try {
-      const apiUrl = "http://172.16.220.253:8000/drug/drug-info/";
+      const apiUrl = "http://172.16.217.175:8000/drug/drug-info/";
       const response = await fetch(apiUrl, {
         method: "POST",
         headers: {
@@ -128,13 +98,31 @@ export default function PrescriptionDetail({ route }) {
         throw new Error("API 호출 실패");
       }
       const data = await response.json();
-      // MedicationDetail 화면으로 약품명과 API 결과 데이터를 함께 전달
-      navigation.navigate("MedicationDetail", { medicationName: medName, drugData: data });
+      navigation.navigate("MedicationDetail", {
+        medicationName: medName,
+        drugData: data
+      });
     } catch (error) {
       console.error("정보 가져오기 실패:", error);
-      // 에러 처리는 필요에 따라 Alert 등을 활용하세요.
+      Alert.alert("오류", "약품 정보를 불러오는데 실패했습니다.");
     }
   };
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Text>로딩 중...</Text>
+      </View>
+    );
+  }
+
+  if (!prescription) {
+    return (
+      <View style={styles.errorContainer}>
+        <Text>처방전 정보를 불러올 수 없습니다.</Text>
+      </View>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -155,17 +143,21 @@ export default function PrescriptionDetail({ route }) {
               <Text style={styles.nameText}>{prescription.childName}</Text>
             </View>
             <Text style={styles.pharmacyName}>{prescription.pharmacyName}</Text>
-            <Text style={styles.address}>약국 위치: {prescription.address}</Text>
+            <Text style={styles.address}>
+              약국 위치: {prescription.address}
+            </Text>
             <Text style={styles.date}>발행일: {prescription.date}</Text>
-            <Text style={styles.price}>총수납금액 합계: {prescription.price}원</Text>
+            <Text style={styles.price}>
+              총수납금액 합계: {prescription.price}원
+            </Text>
           </View>
 
           <View style={styles.medicationList}>
-            {medications.map((med, index) => (
+            {prescription.medicines.map((med, index) => (
               <View key={index} style={styles.medicationItem}>
                 <View style={styles.medHeader}>
                   <Text style={styles.medName}>{med.name}</Text>
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     style={styles.infoButton}
                     onPress={() => handleInfoPress(med.name)}
                   >
@@ -300,5 +292,15 @@ const styles = StyleSheet.create({
   dosage: {
     fontSize: 14,
     color: "#666"
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center"
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center"
   }
-}); 
+});

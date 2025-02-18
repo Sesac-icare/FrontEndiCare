@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -8,15 +8,45 @@ import {
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
+import axios from "axios";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function Contents() {
   const navigation = useNavigation();
+  const [userName, setUserName] = useState("");
+
+  useEffect(() => {
+    fetchUserProfile();
+  }, []);
+
+  const fetchUserProfile = async () => {
+    try {
+      const userToken = await AsyncStorage.getItem("userToken");
+      if (!userToken) return;
+
+      const response = await axios.get(
+        "http://172.16.217.175:8000/users/profile/",
+        {
+          headers: {
+            Authorization: `Token ${userToken}`,
+            "Content-Type": "application/json"
+          }
+        }
+      );
+
+      if (response.data.username) {
+        setUserName(response.data.username);
+      }
+    } catch (error) {
+      console.error("프로필 정보 가져오기 실패:", error);
+    }
+  };
 
   return (
     <View style={styles.container}>
       <View style={styles.titleWrapper}>
         <View style={styles.titleContainer}>
-          <Text style={styles.titleGreen}>사용자</Text>
+          <Text style={styles.titleGreen}>{userName}</Text>
           <Text style={styles.title}>님, 반가워요!</Text>
         </View>
         <Text style={styles.subtitle}>

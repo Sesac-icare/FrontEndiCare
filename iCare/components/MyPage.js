@@ -42,7 +42,7 @@ export default function MyPage() {
               }
 
               const response = await axios.post(
-                "http://3.35.228.23:8000/users/logout/",
+                "http://172.16.217.175:8000/users/logout/",
                 {}, // 빈 객체 (POST 요청이지만 body 데이터는 필요 없음)
                 {
                   headers: {
@@ -119,7 +119,7 @@ export default function MyPage() {
               }
 
               const response = await axios.delete(
-                "http://3.35.228.23:8000/users/delete/",
+                "http://172.16.217.175:8000/users/delete/",
                 {
                   headers: {
                     Authorization: `Token ${userToken}`,

@@ -37,7 +37,7 @@ export default function PrescriptionDetail({ route }) {
       }
 
       const response = await axios.get(
-        `http://3.35.228.23:8000/prescriptions/detail/${prescriptionId}/`,
+        `http://172.16.217.175:8000/prescriptions/detail/${prescriptionId}/`,
         {
           headers: {
             Authorization: `Token ${userToken}`,
@@ -86,7 +86,7 @@ export default function PrescriptionDetail({ route }) {
 
   const handleInfoPress = async (medName) => {
     try {
-      const apiUrl = "http://3.35.228.23:8000/drug/drug-info/";
+      const apiUrl = "http://172.16.217.175:8000/drug/drug-info/";
       const response = await fetch(apiUrl, {
         method: "POST",
         headers: {

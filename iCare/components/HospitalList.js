@@ -37,7 +37,7 @@ export default function HospitalList() {
       }
 
       const response = await axios.get(
-        "http://3.35.228.23:8000/hospital/open/",
+        "http://172.16.217.175:8000/hospital/open/",
         {
           headers: {
             Authorization: `Token ${userToken}`,

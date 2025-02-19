@@ -132,7 +132,7 @@ export default function MedicationDetail() {
 
   useEffect(() => {
     // Django API의 엔드포인트 URL (DrugSearchAPIView)
-    const apiUrl = "http://3.35.228.23:8000/drug/drug-info/";
+    const apiUrl = "http://172.16.217.175:8000/drug/drug-info/";
 
     fetch(apiUrl, {
       method: "POST",

@@ -86,7 +86,7 @@ export default function ChatScreen() {
 
     try {
       const response = await axios.post(
-        "http://3.35.228.23:8000/chat/unified/",
+        "http://172.16.217.175:8000/chat/unified/",
         {
           message: message,
           need_voice: false // 텍스트 입력은 음성 응답 불필요
@@ -179,7 +179,7 @@ export default function ChatScreen() {
       formData.append("need_voice", "true"); // 음성 입력은 음성 응답 필요
 
       const response = await axios.post(
-        "http://3.35.228.23:8000/chat/unified/",
+        "http://172.16.217.175:8000/chat/unified/",
         formData,
         {
           headers: { "Content-Type": "multipart/form-data" }

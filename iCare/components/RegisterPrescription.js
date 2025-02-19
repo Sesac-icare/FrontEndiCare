@@ -135,7 +135,7 @@ export default function RegisterPrescription() {
       formData.append("child_name", childName);
 
       const response = await axios.post(
-        "http://3.35.228.23:8000/prescriptions/ocr/",
+        "http://172.16.217.175:8000/prescriptions/ocr/",
         formData,
         {
           headers: {

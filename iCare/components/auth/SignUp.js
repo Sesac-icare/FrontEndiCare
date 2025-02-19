@@ -61,7 +61,7 @@ export default function SignUp() {
       console.log("회원가입 요청 데이터:", signUpData);
 
       const response = await axios.post(
-        "http://3.35.228.23:8000/users/register/",
+        "http://172.16.217.175:8000/users/register/",
         signUpData
       );
 

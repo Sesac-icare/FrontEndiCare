@@ -31,18 +31,18 @@ export default function HospitalList() {
         Alert.alert("오류", "로그인이 필요합니다.");
         navigation.reset({
           index: 0,
-          routes: [{ name: "Login" }],
+          routes: [{ name: "Login" }]
         });
         return;
       }
 
       const response = await axios.get(
-        "http://192.168.0.18:8000/hospital/open/",
+        "http://3.35.228.23:8000/hospital/open/",
         {
           headers: {
             Authorization: `Token ${userToken}`,
-            "Content-Type": "application/json",
-          },
+            "Content-Type": "application/json"
+          }
         }
       );
 
@@ -117,7 +117,8 @@ export default function HospitalList() {
                   {hospital.state}
                 </Text>
                 <Text style={styles.statusDivider}> | </Text>
-                {hospital.weekday_hours?.mon?.start} ~ {hospital.weekday_hours?.mon?.end}
+                {hospital.weekday_hours?.mon?.start} ~{" "}
+                {hospital.weekday_hours?.mon?.end}
                 <Text style={styles.statusDivider}> | </Text>
                 {hospital.distance.toFixed(1)}km
               </Text>

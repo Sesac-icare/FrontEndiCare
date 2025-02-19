@@ -55,7 +55,7 @@ export default function Login() {
       };
 
       const response = await axios.post(
-        "http://172.16.217.175:8000/users/login/",
+        "http://3.35.228.23:8000/users/login/",
         loginData
       );
       const data = response.data;
@@ -65,7 +65,7 @@ export default function Login() {
         if (userLocation) {
           try {
             await axios.post(
-              "http://172.16.217.175:8000/users/update-location/",
+              "http://3.35.228.23:8000/users/update-location/",
               {
                 latitude: userLocation.coords.latitude,
                 longitude: userLocation.coords.longitude

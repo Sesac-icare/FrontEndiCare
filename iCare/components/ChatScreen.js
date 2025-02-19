@@ -15,7 +15,7 @@ import {
 import { MaterialIcons } from "@expo/vector-icons";
 import axios from "axios";
 import { useNavigation } from "@react-navigation/native";
-import { Audio } from 'expo-av';
+import { Audio } from "expo-av";
 
 export default function ChatScreen() {
   const navigation = useNavigation();
@@ -29,7 +29,7 @@ export default function ChatScreen() {
   const scrollViewRef = useRef();
   const [recording, setRecording] = useState(null);
   const [isRecording, setIsRecording] = useState(false);
-  const [loadingDots, setLoadingDots] = useState('');
+  const [loadingDots, setLoadingDots] = useState("");
 
   useEffect(() => {
     return () => {
@@ -43,7 +43,7 @@ export default function ChatScreen() {
     let interval;
     if (isRecording) {
       interval = setInterval(() => {
-        setLoadingDots(prev => prev.length >= 3 ? '' : prev + '.');
+        setLoadingDots((prev) => (prev.length >= 3 ? "" : prev + "."));
       }, 500);
     }
     return () => clearInterval(interval);
@@ -86,10 +86,10 @@ export default function ChatScreen() {
 
     try {
       const response = await axios.post(
-        "http://192.168.0.18:8000/chat/unified/",
+        "http://3.35.228.23:8000/chat/unified/",
         {
           message: message,
-          need_voice: false  // 텍스트 입력은 음성 응답 불필요
+          need_voice: false // 텍스트 입력은 음성 응답 불필요
         }
       );
 
@@ -119,43 +119,43 @@ export default function ChatScreen() {
       }
 
       const permission = await Audio.requestPermissionsAsync();
-      if (permission.status !== 'granted') {
-        Alert.alert('권한 필요', '음성 인식을 위해 마이크 권한이 필요합니다.');
+      if (permission.status !== "granted") {
+        Alert.alert("권한 필요", "음성 인식을 위해 마이크 권한이 필요합니다.");
         return;
       }
 
       await Audio.setAudioModeAsync({
         allowsRecordingIOS: true,
-        playsInSilentModeIOS: true,
+        playsInSilentModeIOS: true
       });
 
       const newRecording = new Audio.Recording();
       await newRecording.prepareToRecordAsync({
         android: {
-          extension: '.wav',
+          extension: ".wav",
           outputFormat: Audio.RECORDING_OPTION_ANDROID_OUTPUT_FORMAT_DEFAULT,
           audioEncoder: Audio.RECORDING_OPTION_ANDROID_AUDIO_ENCODER_DEFAULT,
           sampleRate: 16000,
           numberOfChannels: 1,
-          bitRate: 128000,
+          bitRate: 128000
         },
         ios: {
-          extension: '.wav',
+          extension: ".wav",
           audioQuality: Audio.RECORDING_OPTION_IOS_AUDIO_QUALITY_HIGH,
           sampleRate: 16000,
           numberOfChannels: 1,
           bitRate: 128000,
           linearPCM: true,
-          audioFormat: Audio.RECORDING_OPTION_IOS_AUDIO_FORMAT_LINEARPCM,
-        },
+          audioFormat: Audio.RECORDING_OPTION_IOS_AUDIO_FORMAT_LINEARPCM
+        }
       });
 
       await newRecording.startAsync();
       setRecording(newRecording);
       setIsRecording(true);
     } catch (error) {
-      console.error('녹음 시작 오류:', error);
-      Alert.alert('오류', '녹음을 시작할 수 없습니다.');
+      console.error("녹음 시작 오류:", error);
+      Alert.alert("오류", "녹음을 시작할 수 없습니다.");
     }
   };
 
@@ -165,39 +165,45 @@ export default function ChatScreen() {
 
       await recording.stopAndUnloadAsync();
       const uri = recording.getURI();
-      
+
       // 녹음 객체 정리
       setRecording(null);
       setIsRecording(false);
 
       const formData = new FormData();
-      formData.append('audio', {
+      formData.append("audio", {
         uri: uri,
-        type: 'audio/wav',
-        name: 'voice_recording.wav'
+        type: "audio/wav",
+        name: "voice_recording.wav"
       });
-      formData.append('need_voice', 'true');  // 음성 입력은 음성 응답 필요
+      formData.append("need_voice", "true"); // 음성 입력은 음성 응답 필요
 
       const response = await axios.post(
-        'http://192.168.0.18:8000/chat/unified/',
+        "http://3.35.228.23:8000/chat/unified/",
         formData,
         {
-          headers: { 'Content-Type': 'multipart/form-data' }
+          headers: { "Content-Type": "multipart/form-data" }
         }
       );
 
       if (response.data.input_text && response.data.input_text.trim()) {
         // 사용자 음성 메시지 표시
-        setMessages(prev => [...prev, {
-          type: "user",
-          text: response.data.input_text
-        }]);
+        setMessages((prev) => [
+          ...prev,
+          {
+            type: "user",
+            text: response.data.input_text
+          }
+        ]);
 
         // GPT 응답 표시
-        setMessages(prev => [...prev, {
-          type: "bot",
-          text: response.data.response_text
-        }]);
+        setMessages((prev) => [
+          ...prev,
+          {
+            type: "bot",
+            text: response.data.response_text
+          }
+        ]);
 
         // 음성 응답 재생
         if (response.data.audio) {
@@ -209,17 +215,23 @@ export default function ChatScreen() {
         }
       } else {
         // 음성이 인식되지 않았을 때 (TTS 없이 텍스트만 표시)
-        setMessages(prev => [...prev, {
-          type: "bot",
-          text: "음성이 인식 취소되었습니다."
-        }]);
+        setMessages((prev) => [
+          ...prev,
+          {
+            type: "bot",
+            text: "음성이 인식 취소되었습니다."
+          }
+        ]);
       }
     } catch (error) {
       // 에러 발생 시 (TTS 없이 텍스트만 표시)
-      setMessages(prev => [...prev, {
-        type: "bot",
-        text: "음성이 인식 취소되었습니다."
-      }]);
+      setMessages((prev) => [
+        ...prev,
+        {
+          type: "bot",
+          text: "음성이 인식 취소되었습니다."
+        }
+      ]);
     }
   };
 
@@ -296,18 +308,20 @@ export default function ChatScreen() {
 
         {/* 입력창 */}
         <View style={styles.inputOuterContainer}>
-          <View style={[
-            styles.inputContainer,
-            isRecording && styles.inputContainerRecording
-          ]}>
-            <TouchableOpacity 
+          <View
+            style={[
+              styles.inputContainer,
+              isRecording && styles.inputContainerRecording
+            ]}
+          >
+            <TouchableOpacity
               style={styles.voiceButton}
               onPress={isRecording ? stopRecording : startRecording}
             >
-              <MaterialIcons 
-                name={isRecording ? "mic-off" : "mic"} 
-                size={24} 
-                color="#666" 
+              <MaterialIcons
+                name={isRecording ? "mic-off" : "mic"}
+                size={24}
+                color="#666"
               />
             </TouchableOpacity>
             <View style={styles.inputWrapper}>
@@ -444,7 +458,7 @@ const styles = StyleSheet.create({
     paddingVertical: 6
   },
   inputContainerRecording: {
-    backgroundColor: '#E8F5F0',  // 옅은 초록색
+    backgroundColor: "#E8F5F0" // 옅은 초록색
   },
   voiceButton: {
     marginRight: 4,

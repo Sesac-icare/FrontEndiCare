@@ -43,7 +43,7 @@ export default function DocumentStorage({ route }) {
   const fetchPrescriptions = async () => {
     try {
       const response = await axios.get(
-        "http://172.16.217.175:8000/prescriptions/list/",
+        "http://3.35.228.23:8000/prescriptions/list/",
         {
           headers: {
             Authorization: `Token ${userToken}`,
@@ -94,7 +94,7 @@ export default function DocumentStorage({ route }) {
   const fetchPrescriptionsByDate = async () => {
     try {
       const response = await axios.get(
-        "http://192.168.0.18:8000/prescriptions/by-date/",
+        "http://3.35.228.23:8000/prescriptions/by-date/",
         {
           headers: {
             Authorization: `Token ${userToken}`,
@@ -176,7 +176,7 @@ export default function DocumentStorage({ route }) {
       }
 
       const response = await axios.delete(
-        `http://192.168.0.18:8000/prescriptions/${selectedPrescription.prescriptionId}/`,
+        `http://3.35.228.23:8000/prescriptions/${selectedPrescription.prescriptionId}/`,
         {
           headers: {
             Authorization: `Token ${userToken}`,

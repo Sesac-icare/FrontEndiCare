@@ -25,7 +25,7 @@ export default function Contents() {
       if (!userToken) return;
 
       const response = await axios.get(
-        "http://172.16.217.175:8000/users/profile/",
+        "http://3.35.228.23:8000/users/profile/",
         {
           headers: {
             Authorization: `Token ${userToken}`,

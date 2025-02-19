@@ -132,8 +132,8 @@ export default function MedicationDetail() {
 
   useEffect(() => {
     // Django API의 엔드포인트 URL (DrugSearchAPIView)
-    const apiUrl = "http://172.16.220.253:8000/drug/drug-info/";
-    
+    const apiUrl = "http://3.35.228.23:8000/drug/drug-info/";
+
     fetch(apiUrl, {
       method: "POST",
       headers: {
@@ -189,20 +189,19 @@ export default function MedicationDetail() {
               <Text style={styles.infoTitle}>제품명: {item.itemName}</Text>
               <Text style={styles.infoText}>약의 효능: {item.efcyQesitm}</Text>
               <Text style={styles.infoText}>주의사항: {item.atpnQesitm}</Text>
-              <Text style={styles.infoText}>보관 방법: {item.depositMethodQesitm}</Text>
+              <Text style={styles.infoText}>
+                보관 방법: {item.depositMethodQesitm}
+              </Text>
               <Text style={styles.infoText}>제조사: {item.entpName}</Text>
             </View>
           ))
         ) : (
-          <Text style={styles.noData}>
-            해당 약품에 대한 정보가 없습니다.
-          </Text>
+          <Text style={styles.noData}>해당 약품에 대한 정보가 없습니다.</Text>
         )}
       </ScrollView>
     </SafeAreaView>
   );
 }
-
 
 const styles = StyleSheet.create({
   safe: {

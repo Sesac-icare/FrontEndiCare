@@ -16,6 +16,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import axios from "axios";
 import { useNavigation } from "@react-navigation/native";
 import { Audio } from "expo-av";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function ChatScreen() {
   const navigation = useNavigation();
@@ -30,6 +31,7 @@ export default function ChatScreen() {
   const [recording, setRecording] = useState(null);
   const [isRecording, setIsRecording] = useState(false);
   const [loadingDots, setLoadingDots] = useState("");
+  const [userToken, setUserToken] = useState(null);
 
   useEffect(() => {
     return () => {
@@ -48,6 +50,19 @@ export default function ChatScreen() {
     }
     return () => clearInterval(interval);
   }, [isRecording]);
+
+  // 토큰 가져오기
+  useEffect(() => {
+    const getToken = async () => {
+      try {
+        const token = await AsyncStorage.getItem("userToken");
+        setUserToken(token);
+      } catch (error) {
+        console.error("토큰 가져오기 실패:", error);
+      }
+    };
+    getToken();
+  }, []);
 
   const handlePharmacySearch = () => {
     setMessages([
@@ -75,6 +90,10 @@ export default function ChatScreen() {
 
   const handleSend = async () => {
     if (!message.trim()) return;
+    if (!userToken) {
+      Alert.alert("오류", "로그인이 필요한 서비스입니다.");
+      return;
+    }
 
     const userMessage = {
       type: "user",
@@ -89,19 +108,64 @@ export default function ChatScreen() {
         "http://172.16.217.175:8000/chat/unified/",
         {
           message: message,
-          need_voice: false // 텍스트 입력은 음성 응답 불필요
+          session_id: `session_${Date.now()}`
+        },
+        {
+          headers: {
+            Authorization: `Token ${userToken}`,
+            "Content-Type": "application/json"
+          }
         }
       );
 
-      if (response.data && response.data.response_text) {
-        const botMessage = {
+      console.log("서버 응답 데이터:", response.data);
+
+      // start_message 표시
+      if (response.data.start_message && response.data.start_message.trim()) {
+        setMessages((prev) => [
+          ...prev,
+          {
+            type: "bot",
+            text: response.data.start_message
+          }
+        ]);
+      }
+
+      // data 처리 (병원 리스트인 경우)
+      if (
+        response.data.type === "hospital_list" ||
+        response.data.type === "pharmacy_list"
+      ) {
+        const listMessage = {
           type: "bot",
-          text: response.data.response_text
+          isHospitalList: true, // 병원/약국 리스트 표시용 플래그
+          hospitals: response.data.data.map((item) => ({
+            ...item,
+            hospital_type:
+              response.data.type === "pharmacy_list"
+                ? "약국"
+                : item.hospital_type
+          }))
         };
-        setMessages((prev) => [...prev, botMessage]);
+        setMessages((prev) => [...prev, listMessage]);
+      }
+
+      // end_message 표시
+      if (response.data.end_message && response.data.end_message.trim()) {
+        setMessages((prev) => [
+          ...prev,
+          {
+            type: "bot",
+            text: response.data.end_message
+          }
+        ]);
       }
     } catch (error) {
-      console.error("Error sending message:", error);
+      console.error("에러 상세 정보:", {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status
+      });
       const errorMessage = {
         type: "bot",
         text: "죄송합니다. 메시지 전송 중 오류가 발생했습니다."
@@ -162,6 +226,10 @@ export default function ChatScreen() {
   const stopRecording = async () => {
     try {
       if (!recording) return;
+      if (!userToken) {
+        Alert.alert("오류", "로그인이 필요한 서비스입니다.");
+        return;
+      }
 
       await recording.stopAndUnloadAsync();
       const uri = recording.getURI();
@@ -182,7 +250,10 @@ export default function ChatScreen() {
         "http://172.16.217.175:8000/chat/unified/",
         formData,
         {
-          headers: { "Content-Type": "multipart/form-data" }
+          headers: {
+            Authorization: `Token ${userToken}`,
+            "Content-Type": "multipart/form-data"
+          }
         }
       );
 
@@ -205,34 +276,101 @@ export default function ChatScreen() {
           }
         ]);
 
-        // 음성 응답 재생
+        // 음성 응답 재생 설정 수정
         if (response.data.audio) {
           const sound = new Audio.Sound();
+          await Audio.setAudioModeAsync({
+            playsInSilentModeIOS: true,
+            allowsRecordingIOS: false,
+            staysActiveInBackground: false,
+            shouldDuckAndroid: true,
+            playThroughEarpieceAndroid: false, // 스피커로 재생
+            volume: 1.0 // 최대 볼륨
+          });
+
           await sound.loadAsync({
             uri: `data:${response.data.audio_type};base64,${response.data.audio}`
           });
+
+          await sound.setVolumeAsync(1.0); // 볼륨을 최대로 설정
           await sound.playAsync();
         }
       } else {
-        // 음성이 인식되지 않았을 때 (TTS 없이 텍스트만 표시)
         setMessages((prev) => [
           ...prev,
           {
             type: "bot",
-            text: "음성이 인식 취소되었습니다."
+            text: "음성이 인식되지 않았습니다."
           }
         ]);
       }
     } catch (error) {
-      // 에러 발생 시 (TTS 없이 텍스트만 표시)
-      setMessages((prev) => [
-        ...prev,
-        {
-          type: "bot",
-          text: "음성이 인식 취소되었습니다."
-        }
-      ]);
+      console.error("Recording error:", error);
+      if (error.response?.status === 401) {
+        Alert.alert("오류", "인증이 만료되었습니다. 다시 로그인해주세요.");
+        await AsyncStorage.removeItem("userToken");
+        navigation.reset({
+          index: 0,
+          routes: [{ name: "Login" }]
+        });
+      } else {
+        setMessages((prev) => [
+          ...prev,
+          {
+            type: "bot",
+            text: "음성 처리 중 오류가 발생했습니다."
+          }
+        ]);
+      }
     }
+  };
+
+  const renderHospitalItem = (hospital) => {
+    return (
+      <View style={styles.hospitalItem}>
+        <View style={styles.hospitalHeader}>
+          <View style={styles.typeLabel}>
+            <Text style={styles.typeText}>
+              {hospital.hospital_type || "약국"}
+            </Text>
+          </View>
+          <Text
+            style={[
+              styles.stateText,
+              hospital.state === "영업중"
+                ? styles.openStatus
+                : styles.closedStatus
+            ]}
+          >
+            {hospital.state}
+          </Text>
+        </View>
+
+        <Text style={styles.hospitalName}>{hospital.name}</Text>
+
+        <View style={styles.infoContainer}>
+          <MaterialIcons name="location-on" size={16} color="#666" />
+          <Text style={styles.infoText}>{hospital.address}</Text>
+        </View>
+
+        <View style={styles.infoContainer}>
+          <MaterialIcons name="phone" size={16} color="#666" />
+          <Text style={styles.infoText}>{hospital.phone}</Text>
+        </View>
+
+        <View style={styles.infoContainer}>
+          <MaterialIcons name="schedule" size={16} color="#666" />
+          <Text style={styles.infoText}>
+            {hospital.weekday_hours?.mon?.start || ""} ~{" "}
+            {hospital.weekday_hours?.mon?.end || ""}
+          </Text>
+        </View>
+
+        <View style={styles.distanceContainer}>
+          <Text style={styles.distanceText}>{hospital.distance}</Text>
+        </View>
+      </View>
+    );
   };
 
   return (
@@ -272,13 +410,23 @@ export default function ChatScreen() {
               <View
                 style={msg.type === "user" ? styles.greenBox : styles.grayBox}
               >
-                <Text
-                  style={
-                    msg.type === "user" ? styles.whiteText : styles.messageText
-                  }
-                >
-                  {msg.text}
-                </Text>
+                {msg.isHospitalList ? (
+                  <View style={styles.listContainer}>
+                    {msg.hospitals.map((hospital, idx) => (
+                      <View key={idx}>{renderHospitalItem(hospital)}</View>
+                    ))}
+                  </View>
+                ) : (
+                  <Text
+                    style={
+                      msg.type === "user"
+                        ? styles.whiteText
+                        : styles.messageText
+                    }
+                  >
+                    {msg.text}
+                  </Text>
+                )}
               </View>
             </View>
           ))}
@@ -488,5 +636,68 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginLeft: 4
+  },
+  listContainer: {
+    width: "100%",
+    gap: 8
+  },
+  hospitalItem: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 8,
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2
+  },
+  hospitalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8
+  },
+  typeLabel: {
+    backgroundColor: "#E8F5E9",
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 12
+  },
+  typeText: {
+    color: "#016A4C",
+    fontSize: 12,
+    fontWeight: "600"
+  },
+  stateText: {
+    fontSize: 12,
+    color: "#666"
+  },
+  openStatus: {
+    color: "#016A4C"
+  },
+  closedStatus: {
+    color: "#FF0000"
+  },
+  hospitalName: {
+    fontSize: 14,
+    color: "#222",
+    marginBottom: 8
+  },
+  infoContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 4
+  },
+  infoText: {
+    marginLeft: 4,
+    color: "#666"
+  },
+  distanceContainer: {
+    marginTop: 8,
+    alignItems: "flex-end"
+  },
+  distanceText: {
+    color: "#666"
   }
 });

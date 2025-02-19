@@ -19,10 +19,11 @@ export default function HospitalList() {
   const navigation = useNavigation();
   const [hospitals, setHospitals] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [filterType, setFilterType] = useState("nearby");
 
   useEffect(() => {
     fetchHospitals();
-  }, []);
+  }, [filterType]);
 
   const fetchHospitals = async () => {
     try {
@@ -36,8 +37,9 @@ export default function HospitalList() {
         return;
       }
 
+      const endpoint = filterType === "open" ? "open" : "nearby";
       const response = await axios.get(
-        "http://172.16.217.175:8000/hospital/open/",
+        `http://172.16.217.175:8000/hospital/${endpoint}/`,
         {
           headers: {
             Authorization: `Token ${userToken}`,
@@ -55,6 +57,10 @@ export default function HospitalList() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const toggleFilter = () => {
+    setFilterType((prev) => (prev === "nearby" ? "open" : "nearby"));
   };
 
   if (loading) {
@@ -89,8 +95,10 @@ export default function HospitalList() {
             <MaterialIcons name="local-hospital" size={24} color="#016A4C" />
             <Text style={styles.pageTitle}>병원찾기</Text>
           </View>
-          <TouchableOpacity style={styles.filterButton}>
-            <Text style={styles.filterText}>가까운 순</Text>
+          <TouchableOpacity style={styles.filterButton} onPress={toggleFilter}>
+            <Text style={styles.filterText}>
+              {filterType === "nearby" ? "가까운 순" : "영업중"}
+            </Text>
             <MaterialIcons
               name="keyboard-arrow-down"
               size={24}

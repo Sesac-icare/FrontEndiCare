@@ -209,6 +209,45 @@ export default function DocumentStorage({ route }) {
     }
   };
 
+  const renderItem = ({ item }) => (
+    <TouchableOpacity
+      key={item.documentId}
+      style={styles.prescriptionItem}
+      onPress={() =>
+        navigation.navigate("PrescriptionDetail", {
+          prescriptionId: item.prescriptionId
+        })
+      }
+    >
+      <View style={styles.itemContent}>
+        <View style={styles.nameTag}>
+          <Text style={styles.childName}>{item.childName}</Text>
+        </View>
+        <Text style={styles.date}>{item.date}</Text>
+        <Text style={styles.pharmacyName}>{item.pharmacyName}</Text>
+        <Text style={styles.duration}>
+          {item.duration
+            ? `${item.duration}일 | ${item.endDate} 까지`
+            : item.endDate}
+        </Text>
+      </View>
+      <View style={styles.itemActions}>
+        <MaterialIcons
+          name="chevron-right"
+          size={24}
+          color="#CCCCCC"
+          style={styles.chevron}
+        />
+        <TouchableOpacity
+          style={styles.deleteButton}
+          onPress={() => handleDelete(item)}
+        >
+          <MaterialIcons name="delete-outline" size={24} color="#FF4444" />
+        </TouchableOpacity>
+      </View>
+    </TouchableOpacity>
+  );
+
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.container}>
@@ -233,73 +272,49 @@ export default function DocumentStorage({ route }) {
               (총 {prescriptions.length}개)
             </Text>
           </View>
-          <TouchableOpacity style={styles.filterButton}>
-            <Text style={styles.filterText}>최신순</Text>
+          <TouchableOpacity
+            style={[
+              styles.filterButton,
+              sortByDate && styles.filterButtonActive
+            ]}
+            onPress={handleSort}
+          >
+            <Text
+              style={[styles.filterText, sortByDate && styles.filterTextActive]}
+            >
+              {sortByDate ? "기본순" : "최신순"}
+            </Text>
             <MaterialIcons
               name="keyboard-arrow-down"
               size={24}
-              color="#666666"
+              color={sortByDate ? "#016A4C" : "#666666"}
             />
           </TouchableOpacity>
         </View>
 
-        <ScrollView style={styles.content}>
-          {prescriptions.length === 0 ? (
-            <View style={styles.emptyContainer}>
-              <View style={styles.iconContainer}>
-                <MaterialIcons name="description" size={80} color="#CCCCCC" />
-              </View>
-              <Text style={styles.emptyText}>
-                약국봉투를 등록하고{"\n"}
-                처방전을 관리해보세요
-              </Text>
-              <Text style={styles.subText}>채팅으로도 등록할 수 있습니다.</Text>
+        {loading ? (
+          <View style={styles.centerContainer}>
+            <Text>로딩 중...</Text>
+          </View>
+        ) : prescriptions.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            <View style={styles.iconContainer}>
+              <MaterialIcons name="description" size={80} color="#CCCCCC" />
             </View>
-          ) : (
-            prescriptions.map((prescription) => (
-              <TouchableOpacity
-                key={prescription.documentId}
-                style={styles.prescriptionItem}
-                onPress={() =>
-                  navigation.navigate("PrescriptionDetail", { prescription })
-                }
-              >
-                <View style={styles.itemContent}>
-                  <View style={styles.nameTag}>
-                    <Text style={styles.childName}>
-                      {prescription.childName}
-                    </Text>
-                  </View>
-                  <Text style={styles.date}>{prescription.date}</Text>
-                  <Text style={styles.pharmacyName}>
-                    {prescription.pharmacyName}
-                  </Text>
-                  <Text style={styles.documentId}>
-                    교부번호: {prescription.documentId}
-                  </Text>
-                </View>
-                <View style={styles.itemActions}>
-                  <MaterialIcons
-                    name="chevron-right"
-                    size={24}
-                    color="#CCCCCC"
-                    style={styles.chevron}
-                  />
-                  <TouchableOpacity
-                    style={styles.deleteButton}
-                    onPress={() => handleDelete(prescription)}
-                  >
-                    <MaterialIcons
-                      name="delete-outline"
-                      size={24}
-                      color="#FF4444"
-                    />
-                  </TouchableOpacity>
-                </View>
-              </TouchableOpacity>
-            ))
-          )}
-        </ScrollView>
+            <Text style={styles.emptyText}>
+              약국봉투를 등록하고{"\n"}
+              처방전을 관리해보세요
+            </Text>
+            <Text style={styles.subText}>채팅으로도 등록할 수 있습니다.</Text>
+          </View>
+        ) : (
+          <FlatList
+            data={prescriptions}
+            renderItem={renderItem}
+            keyExtractor={(item) => item.documentId}
+            contentContainerStyle={[styles.content, { paddingBottom: 80 }]}
+          />
+        )}
 
         <View style={styles.bottomButtonContainer}>
           <TouchableOpacity
@@ -550,7 +565,7 @@ const styles = StyleSheet.create({
     color: "#016A4C",
     marginBottom: 6
   },
-  documentId: {
+  duration: {
     fontSize: 14,
     color: "#666"
   },

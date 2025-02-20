@@ -8,12 +8,14 @@ import {
   SafeAreaView,
   Image,
   ActivityIndicator,
-  Alert
+  Alert,
+  Linking
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
+import { getApiUrl, ENDPOINTS } from '../config/api';
 
 export default function PharmacyList() {
   const navigation = useNavigation();
@@ -43,7 +45,7 @@ export default function PharmacyList() {
 
       const endpoint = filterType === "open" ? "open" : "nearby";
       const response = await axios.get(
-        `http://172.16.217.175:8000/pharmacy/${endpoint}/`,
+        getApiUrl(ENDPOINTS.pharmacyList(endpoint)),
         {
           headers: {
             Authorization: `Token ${userToken}`
@@ -97,6 +99,27 @@ export default function PharmacyList() {
 
   const toggleFilter = () => {
     setFilterType((prev) => (prev === "nearby" ? "open" : "nearby"));
+  };
+
+  const handleCall = (phoneNumber) => {
+    if (!phoneNumber) {
+      Alert.alert("알림", "전화번호 정보가 없습니다.");
+      return;
+    }
+
+    const tel = phoneNumber.replace(/[^0-9]/g, '');
+    
+    Linking.canOpenURL(`tel:${tel}`)
+      .then((supported) => {
+        if (!supported) {
+          Alert.alert("알림", "전화걸기가 지원되지 않는 기기입니다.");
+        } else {
+          return Linking.openURL(`tel:${tel}`);
+        }
+      })
+      .catch((err) => {
+        Alert.alert("오류", "전화 연결 중 문제가 발생했습니다.");
+      });
   };
 
   if (loading) {
@@ -164,16 +187,17 @@ export default function PharmacyList() {
             showsVerticalScrollIndicator={false}
           >
             {pharmacies.map((pharmacy, index) => (
-              <TouchableOpacity key={index} style={styles.pharmacyItem}>
+              <TouchableOpacity 
+                key={index} 
+                style={styles.pharmacyItem}
+                onPress={() => handleCall(pharmacy.tel)}
+              >
+                <View style={styles.typeLabel}>
+                  <Text style={styles.typeText}>약국</Text>
+                </View>
                 <Text style={styles.pharmacyName}>{pharmacy.name}</Text>
                 <Text style={styles.statusText}>
-                  <Text
-                    style={
-                      pharmacy.status === "영업중"
-                        ? styles.openStatus
-                        : styles.closedStatus
-                    }
-                  >
+                  <Text style={pharmacy.status === "영업중" ? styles.openStatus : styles.closedStatus}>
                     {pharmacy.status}
                   </Text>
                   <Text style={styles.statusDivider}> | </Text>
@@ -182,22 +206,12 @@ export default function PharmacyList() {
                   {pharmacy.distance}
                 </Text>
                 <View style={styles.addressContainer}>
-                  <MaterialIcons
-                    name="location-on"
-                    size={18}
-                    color="#666"
-                    style={styles.addressIcon}
-                  />
-                  <Text style={styles.addressText}>{pharmacy.address}</Text>
+                  <MaterialIcons name="location-on" size={16} color="#666" />
+                  <Text style={styles.addressText}>주소: {pharmacy.address}</Text>
                 </View>
                 <View style={styles.telContainer}>
-                  <MaterialIcons
-                    name="phone"
-                    size={18}
-                    color="#016A4C"
-                    style={styles.telIcon}
-                  />
-                  <Text style={styles.telText}>{pharmacy.tel}</Text>
+                  <MaterialIcons name="phone" size={16} color="#666" />
+                  <Text style={styles.telText}>전화: {pharmacy.tel}</Text>
                 </View>
               </TouchableOpacity>
             ))}
@@ -284,9 +298,23 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 2
   },
+  typeLabel: {
+    backgroundColor: "#E8FEEE",
+    paddingVertical: 4,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+    alignSelf: "flex-start",
+    marginBottom: 8
+  },
+  typeText: {
+    color: "#016A4C",
+    fontSize: 14,
+    fontWeight: "600"
+  },
   pharmacyName: {
     fontSize: 16,
     fontWeight: "bold",
+    color: "#222222",
     marginBottom: 8
   },
   statusText: {
@@ -297,44 +325,32 @@ const styles = StyleSheet.create({
   },
   addressContainer: {
     flexDirection: "row",
-    alignItems: "flex-start",
-    marginBottom: 8,
-    paddingRight: 16
-  },
-  addressIcon: {
-    marginTop: 2,
-    marginRight: 4
-  },
-  addressText: {
-    flex: 1,
-    fontSize: 14,
-    color: "#666",
-    lineHeight: 20
+    alignItems: "center",
+    gap: 4,
+    marginBottom: 8
   },
   telContainer: {
     flexDirection: "row",
-    alignItems: "flex-start",
-    marginTop: 4,
-    paddingRight: 16
+    alignItems: "center",
+    gap: 4
   },
-  telIcon: {
-    marginTop: 2,
-    marginRight: 6
+  addressText: {
+    color: "#666",
+    fontSize: 14,
+    flex: 1
   },
   telText: {
-    flex: 1,
+    color: "#666",
     fontSize: 14,
-    color: "#016A4C",
-    fontWeight: "500",
-    lineHeight: 20
+    flex: 1
   },
   openStatus: {
     color: "#016A4C",
-    fontWeight: "700"
+    fontWeight: "600"
   },
   closedStatus: {
     color: "#E53935",
-    fontWeight: "700"
+    fontWeight: "600"
   },
   statusDivider: {
     color: "#CCCCCC"
@@ -370,5 +386,9 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 16,
     fontWeight: "600"
+  },
+  phoneLink: {
+    color: '#016A4C',
+    textDecorationLine: 'underline',
   }
 });

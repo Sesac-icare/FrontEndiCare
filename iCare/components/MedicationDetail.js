@@ -1,203 +1,147 @@
-// import React, { useState, useEffect } from "react";
-// import {
-//   View,
-//   Text,
-//   StyleSheet,
-//   SafeAreaView,
-//   TouchableOpacity,
-//   ScrollView
-// } from "react-native";
-// import { MaterialIcons } from "@expo/vector-icons";
-// import { useNavigation } from "@react-navigation/native";
-// import axios from "axios";
-
-// export default function MedicationDetail({ route }) {
-//   const navigation = useNavigation();
-//   const { medicationName } = route.params;
-//   const [medicationInfo, setMedicationInfo] = useState({
-//     name: "아스피린정 100mg",
-//     company: "바이엘코리아",
-//     description: "아스피린정은 혈전 생성을 억제하여 심근경색이나 뇌 졸중의 예방에 사용되는 약품입니다. 주성분인 아세틸 살리실산이 혈소판 응집을 억제하여 혈전 형성을 방지합니다. 1일 1회 100mg을 복용하며, 식후에 충분한 물과 함께 복용하시기 바랍니다.",
-//     warnings: [
-//       "위장 장애가 있는 환자는 복용 전 의사와 상담이 필요합니다.",
-//       "출혈 경향이 있는 환자는 주의가 필요합니다.",
-//       "임산부는 복용 전 반드시 의사와 상담하십시오.",
-//       "알레르기 반응이 나타날 수 있으니 즉시 의사와 상담하십시오."
-//     ]
-//   });
-
-//   // API 연동 준비될 때까지 주석 처리
-//   /*
-//   useEffect(() => {
-//     fetchMedicationInfo();
-//   }, []);
-
-//   const fetchMedicationInfo = async () => {
-//     try {
-//       const response = await axios.get(
-//         `http://172.16.217.175:8000/medications/${medicationName}/`
-//       );
-//       setMedicationInfo(response.data);
-//     } catch (error) {
-//       console.error("약품 정보 가져오기 실패:", error);
-//     }
-//   };
-//   */
-
-//   return (
-//     <SafeAreaView style={styles.safe}>
-//       <View style={styles.container}>
-//         <View style={styles.header}>
-//           <TouchableOpacity
-//             style={styles.backButton}
-//             onPress={() => navigation.goBack()}
-//           >
-//             <MaterialIcons name="chevron-left" size={32} color="#CCCCCC" />
-//           </TouchableOpacity>
-//           <Text style={styles.headerTitle}>약품 정보</Text>
-//         </View>
-
-//         <ScrollView style={styles.content}>
-//           <Text style={styles.medicationName}>
-//             {medicationInfo?.name || medicationName}
-//           </Text>
-//           <Text style={styles.company}>{medicationInfo?.company}</Text>
-
-//           <View style={styles.section}>
-//             <Text style={styles.sectionTitle}>약품 설명</Text>
-//             <Text style={styles.description}>
-//               {medicationInfo?.description}
-//             </Text>
-//           </View>
-
-//           <View style={styles.section}>
-//             <Text style={styles.sectionTitle}>보관 방법</Text>
-//             <View style={styles.storageList}>
-//               <View style={styles.storageItem}>
-//                 <MaterialIcons name="thermostat" size={24} color="#222" />
-//                 <Text style={styles.storageText}>실온(1-30°C)에서 보관</Text>
-//               </View>
-//               <View style={styles.storageItem}>
-//                 <MaterialIcons name="wb-sunny" size={24} color="#222" />
-//                 <Text style={styles.storageText}>습기와 빛을 피해 보관</Text>
-//               </View>
-//               <View style={styles.storageItem}>
-//                 <MaterialIcons name="child-care" size={24} color="#222" />
-//                 <Text style={styles.storageText}>
-//                   어린이의 손이 닿지 않는 곳에 보관
-//                 </Text>
-//               </View>
-//             </View>
-//           </View>
-
-//           <View style={styles.section}>
-//             <Text style={styles.sectionTitle}>주의사항</Text>
-//             <View style={styles.warningList}>
-//               {medicationInfo?.warnings?.map((warning, index) => (
-//                 <View key={index} style={styles.warningItem}>
-//                   <MaterialIcons name="warning" size={20} color="#016A4C" />
-//                   <Text style={styles.warningText}>{warning}</Text>
-//                 </View>
-//               ))}
-//             </View>
-//           </View>
-//         </ScrollView>
-//       </View>
-//     </SafeAreaView>
-//   );
-// }
-
 import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
   StyleSheet,
+  SafeAreaView,
   ScrollView,
   TouchableOpacity,
-  SafeAreaView,
+  Image,
   ActivityIndicator,
-  Image
+  Alert
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useNavigation, useRoute } from "@react-navigation/native";
+import { getApiUrl, ENDPOINTS } from '../config/api';
 
 export default function MedicationDetail() {
   const navigation = useNavigation();
   const route = useRoute();
-  const { medicationName } = route.params; // PrescriptionDetail에서 전달한 약품명
+  const { medicationName } = route.params; // 약품명을 route params로 받음
 
-  const [drugInfo, setDrugInfo] = useState([]);
+  const [drugInfo, setDrugInfo] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Django API의 엔드포인트 URL (DrugSearchAPIView)
-    const apiUrl = "http://172.16.217.175:8000/drug/drug-info/";
+    const fetchDrugInfo = async () => {
+      try {
+        const response = await fetch(getApiUrl(ENDPOINTS.drugInfo), {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ drugName: medicationName })
+        });
 
-    fetch(apiUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ drugName: medicationName })
-    })
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error("API 호출 실패");
+        const data = await response.json();
+        
+        if (data.type === "no_results") {
+          Alert.alert("알림", data.message, [
+            { text: "확인", onPress: () => navigation.goBack() }
+          ]);
+          return;
         }
-        return response.json();
-      })
-      .then((data) => {
-        setDrugInfo(data);
+
+        if (!response.ok) {
+          throw new Error("약품 정보를 불러오는데 실패했습니다.");
+        }
+
+        if (data.type === "success") {
+          setDrugInfo(data.data[0]);
+        } else {
+          setError("약품 정보를 불러오는데 실패했습니다.");
+        }
+      } catch (err) {
+        setError("약품 정보를 불러오는데 실패했습니다.");
+      } finally {
         setLoading(false);
-      })
-      .catch((err) => {
-        setError(err.message);
-        setLoading(false);
-      });
+      }
+    };
+
+    fetchDrugInfo();
   }, [medicationName]);
 
   if (loading) {
     return (
       <SafeAreaView style={styles.safe}>
-        <ActivityIndicator size="large" color="#016A4C" />
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#016A4C" />
+        </View>
       </SafeAreaView>
     );
   }
 
-  if (error) {
+  if (error || !drugInfo) {
     return (
       <SafeAreaView style={styles.safe}>
-        <Text style={styles.errorText}>Error: {error}</Text>
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>
+            {error || "약품 정보를 찾을 수 없습니다."}
+          </Text>
+        </View>
       </SafeAreaView>
     );
   }
 
   return (
     <SafeAreaView style={styles.safe}>
-      <ScrollView style={styles.container}>
+      {/* 헤더 */}
+      <View style={styles.header}>
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
           <MaterialIcons name="chevron-left" size={32} color="#CCCCCC" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>{medicationName} 정보</Text>
-        {drugInfo && drugInfo.length > 0 ? (
-          drugInfo.map((item, index) => (
-            <View key={index} style={styles.infoCard}>
-              <Text style={styles.infoTitle}>제품명: {item.itemName}</Text>
-              <Text style={styles.infoText}>약의 효능: {item.efcyQesitm}</Text>
-              <Text style={styles.infoText}>주의사항: {item.atpnQesitm}</Text>
-              <Text style={styles.infoText}>
-                보관 방법: {item.depositMethodQesitm}
-              </Text>
-              <Text style={styles.infoText}>제조사: {item.entpName}</Text>
-            </View>
-          ))
-        ) : (
-          <Text style={styles.noData}>해당 약품에 대한 정보가 없습니다.</Text>
-        )}
+        <Image
+          source={require("../assets/HeaderGreenLogo.png")}
+          style={styles.logo}
+          resizeMode="contain"
+        />
+      </View>
+
+      {/* 서브 헤더 */}
+      <View style={styles.subHeader}>
+        <View style={styles.titleContainer}>
+          <MaterialIcons name="medical-services" size={24} color="#016A4C" />
+          <Text style={styles.pageTitle}>약품 정보</Text>
+        </View>
+      </View>
+
+      <ScrollView style={styles.container}>
+        {/* 약 정보 카드 */}
+        <View style={styles.medicationCard}>
+          <Text style={styles.medicationName}>{drugInfo.itemName}</Text>
+          <View style={styles.infoContainer}>
+            <MaterialIcons name="business" size={16} color="#666" />
+            <Text style={styles.infoText}>{drugInfo.entpName}</Text>
+          </View>
+        </View>
+
+        {/* 효능 섹션 */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>효능・효과</Text>
+          <View style={styles.warningContainer}>
+            <Text style={styles.warningText}>{drugInfo.efcyQesitm}</Text>
+          </View>
+        </View>
+
+        {/* 주의사항 섹션 */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>복약 주의사항</Text>
+          <View style={styles.warningContainer}>
+            <Text style={styles.warningText}>{drugInfo.atpnQesitm}</Text>
+          </View>
+        </View>
+
+        {/* 보관방법 섹션 */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>보관방법</Text>
+          <View style={styles.warningContainer}>
+            <Text style={styles.warningText}>{drugInfo.depositMethodQesitm}</Text>
+          </View>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -206,81 +150,119 @@ export default function MedicationDetail() {
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: "#fff"
-  },
-  container: {
-    flex: 1
+    backgroundColor: '#F9FAFB',
   },
   header: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 16,
+    backgroundColor: '#fff',
     borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0"
+    borderBottomColor: '#f0f0f0',
+    position: 'relative',
   },
   backButton: {
     padding: 4,
-    position: "absolute",
+    position: 'absolute',
     left: 20,
-    zIndex: 1
+    zIndex: 1,
   },
-  headerTitle: {
-    flex: 1,
-    textAlign: "center",
+  logo: {
+    width: 48,
+    height: 48,
+    marginLeft: 'auto',
+    marginRight: 'auto',
+  },
+  subHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  titleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  pageTitle: {
     fontSize: 18,
-    fontWeight: "bold"
+    fontWeight: 'bold',
+    color: '#016A4C',
   },
-  content: {
+  container: {
     flex: 1,
-    padding: 20
+    padding: 16,
+  },
+  medicationCard: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
   },
   medicationName: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 8
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#222',
+    marginBottom: 12,
   },
-  company: {
-    fontSize: 16,
-    color: "#666",
-    marginBottom: 24
+  infoContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+    gap: 8,
+  },
+  infoText: {
+    fontSize: 14,
+    color: '#666',
+    flex: 1,
   },
   section: {
-    marginBottom: 24
+    marginBottom: 16,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    marginBottom: 16
-  },
-  description: {
     fontSize: 16,
-    color: "#444",
-    lineHeight: 24
+    fontWeight: '600',
+    color: '#222',
+    marginBottom: 8,
   },
-  storageList: {
-    gap: 12
-  },
-  storageItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12
-  },
-  storageText: {
-    fontSize: 16,
-    color: "#444"
-  },
-  warningList: {
-    gap: 12
-  },
-  warningItem: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 8
+  warningContainer: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 16,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
   },
   warningText: {
+    fontSize: 14,
+    color: '#666',
+    lineHeight: 22,
+  },
+  loadingContainer: {
     flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  errorText: {
     fontSize: 16,
-    color: "#444",
-    lineHeight: 24
+    color: '#666',
+    textAlign: 'center',
   }
 });

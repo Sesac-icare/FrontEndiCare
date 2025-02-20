@@ -17,6 +17,7 @@ import { useNavigation } from "@react-navigation/native";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Location from "expo-location";
+import { getApiUrl, ENDPOINTS } from '../../config/api';
 
 export default function Login() {
   const navigation = useNavigation();
@@ -55,7 +56,7 @@ export default function Login() {
       };
 
       const response = await axios.post(
-        "http://172.16.217.175:8000/users/login/",
+        getApiUrl('/users/login/'),
         loginData
       );
       const data = response.data;
@@ -65,7 +66,7 @@ export default function Login() {
         if (userLocation) {
           try {
             await axios.post(
-              "http://172.16.217.175:8000/users/update-location/",
+              getApiUrl('/users/update-location/'),
               {
                 latitude: userLocation.coords.latitude,
                 longitude: userLocation.coords.longitude

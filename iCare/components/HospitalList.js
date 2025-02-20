@@ -8,12 +8,14 @@ import {
   SafeAreaView,
   Image,
   ActivityIndicator,
-  Alert
+  Alert,
+  Linking
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { getApiUrl, ENDPOINTS } from '../config/api';
 
 export default function HospitalList() {
   const navigation = useNavigation();
@@ -32,19 +34,19 @@ export default function HospitalList() {
         Alert.alert("오류", "로그인이 필요합니다.");
         navigation.reset({
           index: 0,
-          routes: [{ name: "Login" }]
+          routes: [{ name: "Login" }],
         });
         return;
       }
 
       const endpoint = filterType === "open" ? "open" : "nearby";
       const response = await axios.get(
-        `http://172.16.217.175:8000/hospital/${endpoint}/`,
+        getApiUrl(ENDPOINTS.hospitalList(endpoint)),
         {
           headers: {
             Authorization: `Token ${userToken}`,
-            "Content-Type": "application/json"
-          }
+            "Content-Type": "application/json",
+          },
         }
       );
 
@@ -61,6 +63,28 @@ export default function HospitalList() {
 
   const toggleFilter = () => {
     setFilterType((prev) => (prev === "nearby" ? "open" : "nearby"));
+  };
+
+  const handleCall = (phoneNumber) => {
+    if (!phoneNumber) {
+      Alert.alert("알림", "전화번호 정보가 없습니다.");
+      return;
+    }
+
+    // 전화번호에서 특수문자 제거
+    const tel = phoneNumber.replace(/[^0-9]/g, '');
+    
+    Linking.canOpenURL(`tel:${tel}`)
+      .then((supported) => {
+        if (!supported) {
+          Alert.alert("알림", "전화걸기가 지원되지 않는 기기입니다.");
+        } else {
+          return Linking.openURL(`tel:${tel}`);
+        }
+      })
+      .catch((err) => {
+        Alert.alert("오류", "전화 연결 중 문제가 발생했습니다.");
+      });
   };
 
   if (loading) {
@@ -109,24 +133,21 @@ export default function HospitalList() {
 
         <ScrollView style={styles.listContainer}>
           {hospitals.map((hospital) => (
-            <TouchableOpacity key={hospital.id} style={styles.hospitalItem}>
+            <TouchableOpacity 
+              key={hospital.id} 
+              style={styles.hospitalItem}
+              onPress={() => handleCall(hospital.phone)}
+            >
               <View style={styles.typeLabel}>
                 <Text style={styles.typeText}>{hospital.hospital_type}</Text>
               </View>
               <Text style={styles.hospitalName}>{hospital.name}</Text>
               <Text style={styles.statusText}>
-                <Text
-                  style={
-                    hospital.state === "영업중"
-                      ? styles.openStatus
-                      : styles.closedStatus
-                  }
-                >
+                <Text style={hospital.state === "영업중" ? styles.openStatus : styles.closedStatus}>
                   {hospital.state}
                 </Text>
                 <Text style={styles.statusDivider}> | </Text>
-                {hospital.weekday_hours?.mon?.start} ~{" "}
-                {hospital.weekday_hours?.mon?.end}
+                {hospital.weekday_hours?.mon?.start} ~ {hospital.weekday_hours?.mon?.end}
                 <Text style={styles.statusDivider}> | </Text>
                 {hospital.distance.toFixed(1)}km
               </Text>
@@ -140,6 +161,9 @@ export default function HospitalList() {
               </View>
             </TouchableOpacity>
           ))}
+          <Text style={styles.sourceText}>
+            제공: 건강보험심사평가원
+          </Text>
         </ScrollView>
       </View>
     </SafeAreaView>
@@ -283,5 +307,18 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center"
-  }
+  },
+  phoneLink: {
+    color: '#016A4C',
+    textDecorationLine: 'underline',
+  },
+  sourceText: {
+    fontSize: 12,
+    color: '#666',
+    textAlign: 'right',
+    marginTop: 8,
+    marginBottom: 16,
+    marginRight: 16,
+    fontStyle: 'italic'
+  },
 });

@@ -10,6 +10,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { getApiUrl, ENDPOINTS } from '../config/api';
 
 export default function Contents() {
   const navigation = useNavigation();
@@ -25,7 +26,7 @@ export default function Contents() {
       if (!userToken) return;
 
       const response = await axios.get(
-        "http://172.16.217.175:8000/users/profile/",
+        getApiUrl(ENDPOINTS.profile),
         {
           headers: {
             Authorization: `Token ${userToken}`,

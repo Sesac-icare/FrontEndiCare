@@ -16,6 +16,7 @@ import * as ImagePicker from "expo-image-picker";
 import { Camera as ExpoCamera } from "expo-camera";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { getApiUrl, ENDPOINTS } from '../config/api';
 
 export default function RegisterPrescription() {
   const navigation = useNavigation();
@@ -135,7 +136,7 @@ export default function RegisterPrescription() {
       formData.append("child_name", childName);
 
       const response = await axios.post(
-        "http://172.16.217.175:8000/prescriptions/ocr/",
+        getApiUrl(ENDPOINTS.prescriptions),
         formData,
         {
           headers: {

@@ -10,13 +10,15 @@ import {
   KeyboardAvoidingView,
   Platform,
   Image,
-  Alert
+  Alert,
+  Animated
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import axios from "axios";
 import { useNavigation } from "@react-navigation/native";
-import { Audio } from "expo-av";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Audio } from 'expo-av';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getApiUrl, ENDPOINTS } from '../config/api';
 
 export default function ChatScreen() {
   const navigation = useNavigation();
@@ -30,8 +32,11 @@ export default function ChatScreen() {
   const scrollViewRef = useRef();
   const [recording, setRecording] = useState(null);
   const [isRecording, setIsRecording] = useState(false);
-  const [loadingDots, setLoadingDots] = useState("");
+  const [loadingDots, setLoadingDots] = useState('');
   const [userToken, setUserToken] = useState(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState("");
+  const loadingDotsAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     return () => {
@@ -45,7 +50,7 @@ export default function ChatScreen() {
     let interval;
     if (isRecording) {
       interval = setInterval(() => {
-        setLoadingDots((prev) => (prev.length >= 3 ? "" : prev + "."));
+        setLoadingDots(prev => prev.length >= 3 ? '' : prev + '.');
       }, 500);
     }
     return () => clearInterval(interval);
@@ -55,33 +60,215 @@ export default function ChatScreen() {
   useEffect(() => {
     const getToken = async () => {
       try {
-        const token = await AsyncStorage.getItem("userToken");
+        const token = await AsyncStorage.getItem('userToken');
         setUserToken(token);
       } catch (error) {
-        console.error("토큰 가져오기 실패:", error);
+        console.error('토큰 가져오기 실패:', error);
       }
     };
     getToken();
   }, []);
 
-  const handlePharmacySearch = () => {
-    setMessages([
-      ...messages,
-      {
-        type: "bot",
-        text: "약국을 찾아드릴게요. 찾으시려는 지역의 주소를 입력해주세요.\n(예: 서울시 도봉구 창동)"
+  // 로딩 애니메이션 효과
+  useEffect(() => {
+    if (isGenerating) {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(loadingDotsAnim, {
+            toValue: 1,
+            duration: 1000,
+            useNativeDriver: true,
+          }),
+          Animated.timing(loadingDotsAnim, {
+            toValue: 0,
+            duration: 1000,
+            useNativeDriver: true,
+          }),
+        ])
+      ).start();
+    } else {
+      loadingDotsAnim.setValue(0);
+    }
+  }, [isGenerating]);
+
+  const handlePharmacySearch = async () => {
+    if (!userToken) {
+      Alert.alert('오류', '로그인이 필요한 서비스입니다.');
+      return;
+    }
+
+    // 사용자 메시지 추가
+    const userMessage = {
+      type: "user",
+      text: "근처 약국 찾아줘"
+    };
+    setMessages(prev => [...prev, userMessage]);
+
+    try {
+      setIsGenerating(true);
+      setLoadingMessage("근처 약국을 찾고 있어요");
+
+      const response = await axios.post(
+        getApiUrl(ENDPOINTS.chat),
+        {
+          message: "근처 약국 찾아줘",
+          session_id: `session_${Date.now()}`
+        },
+        {
+          headers: {
+            'Authorization': `Token ${userToken}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      console.log('서버 응답:', response.data);
+
+      // multi 타입 응답 처리
+      if (response.data.type === 'multi' && response.data.responses) {
+        // 각 응답을 순차적으로 처리
+        for (const resp of response.data.responses) {
+          // chat 타입이 아닌 경우에만 메시지 표시
+          if (resp.type !== 'chat' && resp.start_message) {
+            setMessages(prev => [...prev, {
+              type: "bot",
+              text: resp.start_message
+            }]);
+          }
+
+          // 리스트 데이터가 있는 경우 표시
+          if (resp.type === 'pharmacy_list' || resp.type === 'hospital_list') {
+            setMessages(prev => [...prev, {
+              type: resp.type,
+              data: resp.data
+            }]);
+          }
+
+          // end_message 표시
+          if (resp.type !== 'chat' && resp.end_message) {
+            setMessages(prev => [...prev, {
+              type: "bot",
+              text: resp.end_message
+            }]);
+          }
+        }
+        return;
       }
-    ]);
+
+      // 검색 결과 없음 처리
+      if (response.data.type === 'no_results') {
+        setMessages(prev => [...prev, {
+          type: "bot",
+          text: response.data.start_message
+        }]);
+        if (response.data.end_message) {
+          setMessages(prev => [...prev, {
+            type: "bot",
+            text: response.data.end_message
+          }]);
+        }
+        return;
+      }
+    } catch (error) {
+      console.error('API 호출 오류:', error);
+      setMessages(prev => [...prev, {
+        type: "bot",
+        text: "죄송합니다. 약국 검색 중 오류가 발생했습니다."
+      }]);
+    } finally {
+      setIsGenerating(false);
+      setLoadingMessage("");
+    }
   };
 
-  const handleHospitalSearch = () => {
-    setMessages([
-      ...messages,
-      {
-        type: "bot",
-        text: "병원을 찾아드릴게요. 찾으시려는 지역의 주소를 입력해주세요.\n(예: 서울시 도봉구 창동)"
+  const handleHospitalSearch = async () => {
+    if (!userToken) {
+      Alert.alert('오류', '로그인이 필요한 서비스입니다.');
+      return;
+    }
+
+    // 사용자 메시지 추가
+    const userMessage = {
+      type: "user",
+      text: "근처 병원 찾아줘"
+    };
+    setMessages(prev => [...prev, userMessage]);
+
+    try {
+      setIsGenerating(true);
+      setLoadingMessage("근처 병원을 찾고 있어요");
+
+      const response = await axios.post(
+        getApiUrl(ENDPOINTS.chat),
+        {
+          message: "근처 병원 찾아줘",
+          session_id: `session_${Date.now()}`
+        },
+        {
+          headers: {
+            'Authorization': `Token ${userToken}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      console.log('서버 응답:', response.data);
+
+      // multi 타입 응답 처리
+      if (response.data.type === 'multi' && response.data.responses) {
+        // 각 응답을 순차적으로 처리
+        for (const resp of response.data.responses) {
+          // chat 타입이 아닌 경우에만 메시지 표시
+          if (resp.type !== 'chat' && resp.start_message) {
+            setMessages(prev => [...prev, {
+              type: "bot",
+              text: resp.start_message
+            }]);
+          }
+
+          // 리스트 데이터가 있는 경우 표시
+          if (resp.type === 'pharmacy_list' || resp.type === 'hospital_list') {
+            setMessages(prev => [...prev, {
+              type: resp.type,
+              data: resp.data
+            }]);
+          }
+
+          // end_message 표시
+          if (resp.type !== 'chat' && resp.end_message) {
+            setMessages(prev => [...prev, {
+              type: "bot",
+              text: resp.end_message
+            }]);
+          }
+        }
+        return;
       }
-    ]);
+
+      // 검색 결과 없음 처리
+      if (response.data.type === 'no_results') {
+        setMessages(prev => [...prev, {
+          type: "bot",
+          text: response.data.start_message
+        }]);
+        if (response.data.end_message) {
+          setMessages(prev => [...prev, {
+            type: "bot",
+            text: response.data.end_message
+          }]);
+        }
+        return;
+      }
+    } catch (error) {
+      console.error('API 호출 오류:', error);
+      setMessages(prev => [...prev, {
+        type: "bot",
+        text: "죄송합니다. 병원 검색 중 오류가 발생했습니다."
+      }]);
+    } finally {
+      setIsGenerating(false);
+      setLoadingMessage("");
+    }
   };
 
   const handlePrescriptionUpload = () => {
@@ -91,7 +278,7 @@ export default function ChatScreen() {
   const handleSend = async () => {
     if (!message.trim()) return;
     if (!userToken) {
-      Alert.alert("오류", "로그인이 필요한 서비스입니다.");
+      Alert.alert('오류', '로그인이 필요한 서비스입니다.');
       return;
     }
 
@@ -104,62 +291,102 @@ export default function ChatScreen() {
     setMessage("");
 
     try {
+      setIsGenerating(true);
+      
+      // 메시지 내용에 따라 로딩 메시지 설정
+      if (message.includes("병원")) {
+        setLoadingMessage("근처 병원을 찾고 있어요");
+      } else if (message.includes("약국")) {
+        setLoadingMessage("근처 약국을 찾고 있어요");
+      } else {
+        setLoadingMessage("답변을 생성하고 있어요");
+      }
+      
       const response = await axios.post(
-        "http://172.16.217.175:8000/chat/unified/",
+        getApiUrl(ENDPOINTS.chat),
         {
           message: message,
           session_id: `session_${Date.now()}`
         },
         {
           headers: {
-            Authorization: `Token ${userToken}`,
-            "Content-Type": "application/json"
+            'Authorization': `Token ${userToken}`,
+            'Content-Type': 'application/json'
           }
         }
       );
 
-      console.log("서버 응답 데이터:", response.data);
+      console.log('서버 응답 데이터:', response.data);
 
-      // start_message 표시
-      if (response.data.start_message && response.data.start_message.trim()) {
-        setMessages((prev) => [
-          ...prev,
-          {
+      if (response.data.type === 'pharmacy_list') {
+        // start_message 표시
+        if (response.data.start_message) {
+          setMessages(prev => [...prev, {
             type: "bot",
             text: response.data.start_message
-          }
-        ]);
+          }]);
+        }
+
+        // 약국 리스트 메시지
+        const pharmacyListMessage = {
+          type: "pharmacy_list",
+          data: response.data.data
+        };
+        setMessages(prev => [...prev, pharmacyListMessage]);
+
+        // end_message 표시
+        if (response.data.end_message) {
+          setMessages(prev => [...prev, {
+            type: "bot",
+            text: response.data.end_message
+          }]);
+        }
+        return;
       }
 
       // data 처리 (병원 리스트인 경우)
-      if (
-        response.data.type === "hospital_list" ||
-        response.data.type === "pharmacy_list"
-      ) {
-        const listMessage = {
-          type: "bot",
-          isHospitalList: true, // 병원/약국 리스트 표시용 플래그
-          hospitals: response.data.data.map((item) => ({
-            ...item,
-            hospital_type:
-              response.data.type === "pharmacy_list"
-                ? "약국"
-                : item.hospital_type
-          }))
+      if (response.data.type === 'hospital_list') {
+        // start_message 표시
+        if (response.data.start_message) {
+          setMessages(prev => [...prev, {
+            type: "bot",
+            text: response.data.start_message
+          }]);
+        }
+
+        // 병원 리스트 메시지
+        const hospitalListMessage = {
+          type: "hospital_list",
+          data: response.data.data
         };
-        setMessages((prev) => [...prev, listMessage]);
+        setMessages(prev => [...prev, hospitalListMessage]);
+
+        // end_message 표시
+        if (response.data.end_message) {
+          setMessages(prev => [...prev, {
+            type: "bot",
+            text: response.data.end_message
+          }]);
+        }
+        return;
+      }
+
+      // start_message 표시
+      if (response.data.start_message && response.data.start_message.trim()) {
+        setMessages(prev => [...prev, {
+          type: "bot",
+          text: response.data.start_message
+        }]);
       }
 
       // end_message 표시
       if (response.data.end_message && response.data.end_message.trim()) {
-        setMessages((prev) => [
-          ...prev,
-          {
-            type: "bot",
-            text: response.data.end_message
-          }
-        ]);
+        setMessages(prev => [...prev, {
+          type: "bot",
+          text: response.data.end_message
+        }]);
       }
+
     } catch (error) {
       console.error("에러 상세 정보:", {
         message: error.message,
@@ -170,7 +397,10 @@ export default function ChatScreen() {
         type: "bot",
         text: "죄송합니다. 메시지 전송 중 오류가 발생했습니다."
       };
-      setMessages((prev) => [...prev, errorMessage]);
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setIsGenerating(false);
+      setLoadingMessage("");
     }
   };
 
@@ -183,43 +413,49 @@ export default function ChatScreen() {
       }
 
       const permission = await Audio.requestPermissionsAsync();
-      if (permission.status !== "granted") {
-        Alert.alert("권한 필요", "음성 인식을 위해 마이크 권한이 필요합니다.");
+      if (permission.status !== 'granted') {
+        Alert.alert('권한 필요', '음성 인식을 위해 마이크 권한이 필요합니다.');
         return;
       }
 
       await Audio.setAudioModeAsync({
         allowsRecordingIOS: true,
-        playsInSilentModeIOS: true
+        playsInSilentModeIOS: true,
       });
+
+      // 녹음 시작 시 사용자 메시지 추가
+      setMessages(prev => [...prev, {
+        type: "user",
+        text: "🎤 음성 메시지 녹음 중..."
+      }]);
 
       const newRecording = new Audio.Recording();
       await newRecording.prepareToRecordAsync({
         android: {
-          extension: ".wav",
+          extension: '.wav',
           outputFormat: Audio.RECORDING_OPTION_ANDROID_OUTPUT_FORMAT_DEFAULT,
           audioEncoder: Audio.RECORDING_OPTION_ANDROID_AUDIO_ENCODER_DEFAULT,
           sampleRate: 16000,
           numberOfChannels: 1,
-          bitRate: 128000
+          bitRate: 128000,
         },
         ios: {
-          extension: ".wav",
+          extension: '.wav',
           audioQuality: Audio.RECORDING_OPTION_IOS_AUDIO_QUALITY_HIGH,
           sampleRate: 16000,
           numberOfChannels: 1,
           bitRate: 128000,
           linearPCM: true,
-          audioFormat: Audio.RECORDING_OPTION_IOS_AUDIO_FORMAT_LINEARPCM
-        }
+          audioFormat: Audio.RECORDING_OPTION_IOS_AUDIO_FORMAT_LINEARPCM,
+        },
       });
 
       await newRecording.startAsync();
       setRecording(newRecording);
       setIsRecording(true);
     } catch (error) {
-      console.error("녹음 시작 오류:", error);
-      Alert.alert("오류", "녹음을 시작할 수 없습니다.");
+      console.error('녹음 시작 오류:', error);
+      Alert.alert('오류', '녹음을 시작할 수 없습니다.');
     }
   };
 
@@ -227,56 +463,65 @@ export default function ChatScreen() {
     try {
       if (!recording) return;
       if (!userToken) {
-        Alert.alert("오류", "로그인이 필요한 서비스입니다.");
+        Alert.alert('오류', '로그인이 필요한 서비스입니다.');
         return;
       }
 
       await recording.stopAndUnloadAsync();
       const uri = recording.getURI();
-
+      
       // 녹음 객체 정리
       setRecording(null);
       setIsRecording(false);
 
-      const formData = new FormData();
-      formData.append("audio", {
-        uri: uri,
-        type: "audio/wav",
-        name: "voice_recording.wav"
-      });
-      formData.append("need_voice", "true"); // 음성 입력은 음성 응답 필요
-
-      const response = await axios.post(
-        "http://172.16.217.175:8000/chat/unified/",
-        formData,
+      // 녹음 중 메시지를 "음성 메시지 변환 중..."으로 변경
+      setMessages(prev => [
+        ...prev.slice(0, -1),
         {
-          headers: {
-            Authorization: `Token ${userToken}`,
-            "Content-Type": "multipart/form-data"
-          }
+          type: "user",
+          text: "음성 메시지 변환 중..."
         }
-      );
+      ]);
 
-      if (response.data.input_text && response.data.input_text.trim()) {
-        // 사용자 음성 메시지 표시
-        setMessages((prev) => [
-          ...prev,
+      try {
+        setIsGenerating(true);
+        setLoadingMessage("음성을 인식하고 있어요");
+        
+        const formData = new FormData();
+        formData.append('audio', {
+          uri: uri,
+          type: 'audio/wav',
+          name: 'audio.wav'
+        });
+        formData.append('session_id', `session_${Date.now()}`);
+        formData.append('need_voice', 'true');
+
+        const response = await axios.post(
+          getApiUrl(ENDPOINTS.chat),
+          formData,
           {
-            type: "user",
-            text: response.data.input_text
+            headers: {
+              'Authorization': `Token ${userToken}`,
+              'Content-Type': 'multipart/form-data'
+            }
           }
-        ]);
+        );
 
-        // GPT 응답 표시
-        setMessages((prev) => [
-          ...prev,
-          {
-            type: "bot",
-            text: response.data.response_text
-          }
-        ]);
+        console.log('음성 인식 응답:', response.data);
 
-        // 음성 응답 재생 설정 수정
+        // 사용자의 음성 메시지를 채팅창에 추가
+        if (response.data.input_text) {
+          // "음성 메시지 변환 중..." 메시지를 실제 변환된 텍스트로 교체
+          setMessages(prev => [
+            ...prev.slice(0, -1),
+            {
+              type: "user",
+              text: response.data.input_text
+            }
+          ]);
+        }
+
+        // 음성 응답 재생
         if (response.data.audio) {
           const sound = new Audio.Sound();
           await Audio.setAudioModeAsync({
@@ -284,44 +529,65 @@ export default function ChatScreen() {
             allowsRecordingIOS: false,
             staysActiveInBackground: false,
             shouldDuckAndroid: true,
-            playThroughEarpieceAndroid: false, // 스피커로 재생
-            volume: 1.0 // 최대 볼륨
+            playThroughEarpieceAndroid: false,
           });
-
+          
           await sound.loadAsync({
             uri: `data:${response.data.audio_type};base64,${response.data.audio}`
           });
-
-          await sound.setVolumeAsync(1.0); // 볼륨을 최대로 설정
+          
+          await sound.setVolumeAsync(1.0);
           await sound.playAsync();
         }
-      } else {
-        setMessages((prev) => [
-          ...prev,
-          {
-            type: "bot",
-            text: "음성이 인식되지 않았습니다."
+
+        // 서버 응답 메시지 처리
+        if (response.data.type === 'pharmacy_list' || response.data.type === 'hospital_list') {
+          // start_message 표시
+          if (response.data.start_message) {
+            setMessages(prev => [...prev, {
+              type: "bot",
+              text: response.data.start_message
+            }]);
           }
-        ]);
+
+          // 리스트 메시지
+          const listMessage = {
+            type: response.data.type,
+            data: response.data.data
+          };
+          setMessages(prev => [...prev, listMessage]);
+
+          // end_message 표시
+          if (response.data.end_message) {
+            setMessages(prev => [...prev, {
+              type: "bot",
+              text: response.data.end_message
+            }]);
+          }
+        } else {
+          // 일반 응답 메시지
+          const botMessage = {
+            type: "bot",
+            text: response.data.start_message
+          };
+          setMessages(prev => [...prev, botMessage]);
+        }
+
+      } catch (error) {
+        console.error('음성 인식 오류:', error);
+        const errorMessage = {
+          type: "bot",
+          text: "음성 인식 중 오류가 발생했습니다. 다시 시도해주세요."
+        };
+        setMessages(prev => [...prev, errorMessage]);
+      } finally {
+        setIsGenerating(false);
+        setLoadingMessage("");
       }
+
     } catch (error) {
-      console.error("Recording error:", error);
-      if (error.response?.status === 401) {
-        Alert.alert("오류", "인증이 만료되었습니다. 다시 로그인해주세요.");
-        await AsyncStorage.removeItem("userToken");
-        navigation.reset({
-          index: 0,
-          routes: [{ name: "Login" }]
-        });
-      } else {
-        setMessages((prev) => [
-          ...prev,
-          {
-            type: "bot",
-            text: "음성 처리 중 오류가 발생했습니다."
-          }
-        ]);
-      }
+      console.error('녹음 중지 오류:', error);
+      Alert.alert('오류', '녹음을 중지할 수 없습니다.');
     }
   };
 
@@ -330,42 +596,29 @@ export default function ChatScreen() {
       <View style={styles.hospitalItem}>
         <View style={styles.hospitalHeader}>
           <View style={styles.typeLabel}>
-            <Text style={styles.typeText}>
-              {hospital.hospital_type || "약국"}
-            </Text>
+            <Text style={styles.typeText}>{hospital.hospital_type}</Text>
           </View>
-          <Text
-            style={[
-              styles.stateText,
-              hospital.state === "영업중"
-                ? styles.openStatus
-                : styles.closedStatus
-            ]}
-          >
-            {hospital.state}
-          </Text>
         </View>
-
+        
         <Text style={styles.hospitalName}>{hospital.name}</Text>
-
+        
         <View style={styles.infoContainer}>
           <MaterialIcons name="location-on" size={16} color="#666" />
           <Text style={styles.infoText}>{hospital.address}</Text>
         </View>
-
+        
         <View style={styles.infoContainer}>
           <MaterialIcons name="phone" size={16} color="#666" />
           <Text style={styles.infoText}>{hospital.phone}</Text>
         </View>
-
+        
         <View style={styles.infoContainer}>
           <MaterialIcons name="schedule" size={16} color="#666" />
           <Text style={styles.infoText}>
-            {hospital.weekday_hours?.mon?.start || ""} ~{" "}
-            {hospital.weekday_hours?.mon?.end || ""}
+            {hospital.weekday_hours?.mon?.start || ''} ~ {hospital.weekday_hours?.mon?.end || ''}
           </Text>
         </View>
-
+        
         <View style={styles.distanceContainer}>
           <Text style={styles.distanceText}>{hospital.distance}</Text>
         </View>
@@ -407,29 +660,117 @@ export default function ChatScreen() {
               {msg.type === "bot" && (
                 <Text style={styles.botName}>아이케어봇</Text>
               )}
-              <View
-                style={msg.type === "user" ? styles.greenBox : styles.grayBox}
-              >
-                {msg.isHospitalList ? (
-                  <View style={styles.listContainer}>
-                    {msg.hospitals.map((hospital, idx) => (
-                      <View key={idx}>{renderHospitalItem(hospital)}</View>
-                    ))}
-                  </View>
-                ) : (
-                  <Text
-                    style={
-                      msg.type === "user"
-                        ? styles.whiteText
-                        : styles.messageText
-                    }
-                  >
-                    {msg.text}
+              {msg.type === "pharmacy_list" ? (
+                <View style={styles.listContainer}>
+                  {msg.data.map((pharmacy, idx) => (
+                    <View key={idx} style={styles.hospitalItem}>
+                      <View style={styles.hospitalHeader}>
+                        <View style={styles.typeLabel}>
+                          <Text style={styles.typeText}>약국</Text>
+                        </View>
+                      </View>
+                      <Text style={styles.hospitalName}>{pharmacy["약국명"]}</Text>
+                      <View style={styles.infoContainer}>
+                        <MaterialIcons name="location-on" size={16} color="#666" />
+                        <Text style={styles.infoText}>{pharmacy["주소"]}</Text>
+                      </View>
+                      <View style={styles.infoContainer}>
+                        <MaterialIcons name="schedule" size={16} color="#666" />
+                        <Text style={styles.infoText}>{pharmacy["영업 시간"]}</Text>
+                      </View>
+                      <View style={styles.infoContainer}>
+                        <MaterialIcons name="phone" size={16} color="#666" />
+                        <Text style={styles.infoText}>{pharmacy["전화"]}</Text>
+                      </View>
+                      <View style={styles.distanceContainer}>
+                        <Text style={styles.distanceText}>{pharmacy["거리"]}</Text>
+                      </View>
+                    </View>
+                  ))}
+                  <Text style={styles.sourceText}>
+                    제공: 건강보험심사평가원
                   </Text>
-                )}
-              </View>
+                </View>
+              ) : msg.type === "hospital_list" ? (
+                <View style={styles.listContainer}>
+                  {msg.data.map((hospital, idx) => (
+                    <View key={idx} style={styles.hospitalItem}>
+                      <View style={styles.hospitalHeader}>
+                        <View style={styles.typeLabel}>
+                          <Text style={styles.typeText}>{hospital.hospital_type}</Text>
+                        </View>
+                      </View>
+                      <Text style={styles.hospitalName}>{hospital.name}</Text>
+                      <View style={styles.infoContainer}>
+                        <MaterialIcons name="location-on" size={16} color="#666" />
+                        <Text style={styles.infoText}>{hospital.address}</Text>
+                      </View>
+                      <View style={styles.infoContainer}>
+                        <MaterialIcons name="schedule" size={16} color="#666" />
+                        <Text style={styles.infoText}>
+                          {hospital.weekday_hours?.mon?.start || ''} ~ {hospital.weekday_hours?.mon?.end || ''}
+                        </Text>
+                      </View>
+                      <View style={styles.infoContainer}>
+                        <MaterialIcons name="phone" size={16} color="#666" />
+                        <Text style={styles.infoText}>{hospital.phone}</Text>
+                      </View>
+                      <View style={styles.distanceContainer}>
+                        <Text style={styles.distanceText}>{hospital.distance}</Text>
+                      </View>
+                    </View>
+                  ))}
+                  <Text style={styles.sourceText}>
+                    제공: 건강보험심사평가원
+                  </Text>
+                </View>
+              ) : (
+                <View
+                  style={[
+                    styles.messageContainer,
+                    msg.type === "user" ? styles.userContainer : styles.botContainer,
+                  ]}
+                >
+                  <View style={msg.type === "user" ? styles.userBubble : styles.botBubble}>
+                    <Text style={msg.type === "user" ? styles.whiteText : styles.messageText}>
+                      {msg.text}
+                    </Text>
+                  </View>
+                </View>
+              )}
             </View>
           ))}
+
+          {/* 응답 생성 중일 때 표시되는 로딩 메시지 */}
+          {isGenerating && (
+            <View>
+              <Text style={styles.botName}>아이케어봇</Text>
+              <View style={[styles.messageContainer, styles.botContainer]}>
+                <View style={[styles.botBubble, styles.loadingBubble]}>
+                  <View style={styles.loadingContainer}>
+                    <Text style={styles.loadingText}>{loadingMessage}</Text>
+                    <Animated.Text 
+                      style={[
+                        styles.loadingDots,
+                        {
+                          opacity: loadingDotsAnim,
+                          transform: [{
+                            translateY: loadingDotsAnim.interpolate({
+                              inputRange: [0, 1],
+                              outputRange: [0, -3]
+                            })
+                          }]
+                        }
+                      ]}
+                    >
+                      ...
+                    </Animated.Text>
+                    <MaterialIcons name="search" size={18} color="#016A4C" style={styles.searchIcon} />
+                  </View>
+                </View>
+              </View>
+            </View>
+          )}
 
           {/* 버튼 그룹 */}
           <View style={styles.buttonGroup}>
@@ -456,20 +797,18 @@ export default function ChatScreen() {
 
         {/* 입력창 */}
         <View style={styles.inputOuterContainer}>
-          <View
-            style={[
-              styles.inputContainer,
-              isRecording && styles.inputContainerRecording
-            ]}
-          >
-            <TouchableOpacity
+          <View style={[
+            styles.inputContainer,
+            isRecording && styles.inputContainerRecording
+          ]}>
+            <TouchableOpacity 
               style={styles.voiceButton}
               onPress={isRecording ? stopRecording : startRecording}
             >
-              <MaterialIcons
-                name={isRecording ? "mic-off" : "mic"}
-                size={24}
-                color="#666"
+              <MaterialIcons 
+                name={isRecording ? "mic-off" : "mic"} 
+                size={24} 
+                color="#666" 
               />
             </TouchableOpacity>
             <View style={styles.inputWrapper}>
@@ -606,7 +945,7 @@ const styles = StyleSheet.create({
     paddingVertical: 6
   },
   inputContainerRecording: {
-    backgroundColor: "#E8F5F0" // 옅은 초록색
+    backgroundColor: '#E8F5F0',  // 옅은 초록색
   },
   voiceButton: {
     marginRight: 4,
@@ -638,66 +977,165 @@ const styles = StyleSheet.create({
     marginLeft: 4
   },
   listContainer: {
-    width: "100%",
-    gap: 8
+    padding: 12,
+    marginHorizontal: 16,
+    marginBottom: 16,
   },
   hospitalItem: {
-    backgroundColor: "#fff",
+    backgroundColor: '#fff',
     borderRadius: 12,
     padding: 16,
-    marginBottom: 8,
+    marginBottom: 12,
     elevation: 2,
-    shadowColor: "#000",
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
   },
   hospitalHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 8
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
   },
   typeLabel: {
-    backgroundColor: "#E8F5E9",
+    backgroundColor: '#E8F5E9',
     paddingVertical: 4,
     paddingHorizontal: 8,
-    borderRadius: 12
+    borderRadius: 12,
   },
   typeText: {
-    color: "#016A4C",
-    fontSize: 12,
-    fontWeight: "600"
+    color: '#016A4C',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  hospitalName: {
+    fontSize: 15,
+    fontWeight: 'bold',
+    color: '#222',
+    marginBottom: 8,
+  },
+  infoContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  infoText: {
+    marginLeft: 6,
+    fontSize: 14,
+    color: '#666',
+    flex: 1,  // 긴 텍스트 자동 줄바꿈
+  },
+  distanceContainer: {
+    marginTop: 4,
+    alignItems: 'flex-end',
+  },
+  distanceText: {
+    fontSize: 13,
+    color: '#016A4C',
+    fontWeight: '500',
+  },
+  messageContainer: {
+    marginBottom: 20,  // 메시지 간격 증가
+  },
+  userContainer: {
+    alignSelf: 'flex-end',
+  },
+  botContainer: {
+    alignSelf: 'flex-start',
+  },
+  userBubble: {
+    backgroundColor: '#00B386',
+    padding: 12,
+    paddingHorizontal: 14,
+    borderRadius: 20,
+    maxWidth: '65%',
+    marginBottom: 12,
+    marginRight: 8,
+    marginLeft: 48,
+  },
+  botBubble: {
+    backgroundColor: '#F5F5F5',
+    padding: 14,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    maxWidth: 'auto',
+    marginBottom: 16,
+    marginLeft: 4,
+    marginRight: 48,
+  },
+  loadingBubble: {
+    backgroundColor: '#E8F5E9',  // 연한 초록색 배경
+    borderWidth: 1,
+    borderColor: '#00B386',
+  },
+  loadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  loadingText: {
+    color: '#016A4C',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  loadingDots: {
+    color: '#016A4C',
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginTop: -2, // 텍스트와 수직 정렬을 맞추기 위해
+  },
+  searchIcon: {
+    marginLeft: 4,
+  },
+  pharmacyItem: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+  },
+  pharmacyHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  pharmacyName: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#222',
+  },
+  stateLabel: {
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 12,
+  },
+  openState: {
+    backgroundColor: '#E8F5E9',
+  },
+  closedState: {
+    backgroundColor: '#FFEBEE',
   },
   stateText: {
     fontSize: 12,
-    color: "#666"
+    fontWeight: '600',
   },
-  openStatus: {
-    color: "#016A4C"
+  openStateText: {
+    color: '#016A4C',
   },
-  closedStatus: {
-    color: "#FF0000"
+  closedStateText: {
+    color: '#D32F2F',
   },
-  hospitalName: {
-    fontSize: 14,
-    color: "#222",
-    marginBottom: 8
-  },
-  infoContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 4
-  },
-  infoText: {
-    marginLeft: 4,
-    color: "#666"
-  },
-  distanceContainer: {
+  sourceText: {
+    fontSize: 12,
+    color: '#666',
+    textAlign: 'right',
     marginTop: 8,
-    alignItems: "flex-end"
-  },
-  distanceText: {
-    color: "#666"
+    fontStyle: 'italic'
   }
 });

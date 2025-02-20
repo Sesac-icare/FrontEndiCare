@@ -15,6 +15,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import axios from "axios";
 import * as Location from "expo-location";
+import { getApiUrl, ENDPOINTS } from '../../config/api';
 
 export default function SignUp() {
   const navigation = useNavigation();
@@ -61,7 +62,7 @@ export default function SignUp() {
       console.log("회원가입 요청 데이터:", signUpData);
 
       const response = await axios.post(
-        "http://172.16.217.175:8000/users/register/",
+        getApiUrl('/users/register/'),
         signUpData
       );
 

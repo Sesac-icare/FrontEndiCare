@@ -13,6 +13,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
+import { getApiUrl, ENDPOINTS } from '../config/api';
 
 export default function PrescriptionDetail({ route }) {
   const navigation = useNavigation();
@@ -37,7 +38,7 @@ export default function PrescriptionDetail({ route }) {
       }
 
       const response = await axios.get(
-        `http://172.16.217.175:8000/prescriptions/detail/${prescriptionId}/`,
+        getApiUrl(ENDPOINTS.prescriptionDetail(prescriptionId)),
         {
           headers: {
             Authorization: `Token ${userToken}`,
@@ -86,14 +87,16 @@ export default function PrescriptionDetail({ route }) {
 
   const handleInfoPress = async (medName) => {
     try {
-      const apiUrl = "http://172.16.217.175:8000/drug/drug-info/";
-      const response = await fetch(apiUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ drugName: medName })
-      });
+      const response = await fetch(
+        getApiUrl(ENDPOINTS.drugInfo),
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ drugName: medName })
+        }
+      );
       if (!response.ok) {
         throw new Error("API 호출 실패");
       }
